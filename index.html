@@ -486,29 +486,75 @@
       catch (e) { return parseFloat(clean) || 0; }
     }
 
-    async function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
       e.preventDefault();
-      const btn = document.getElementById("btnSaveExpense"); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
-      const t = appState.trips.find(x=>x.id===appState.currentTripId);
+      const btn = document.getElementById("btnSaveExpense"); 
+      btn.disabled = true; 
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
       
+      const t = appState.trips.find(x => x.id === appState.currentTripId);
       const amtExpr = document.getElementById("fieldAmount").value.trim();
       const evaluatedAmt = evaluateMathAmount(amtExpr);
       
-      const payload = {
+      // 1. Build the base payload
+      let payload = {
         action: "addExpense",
-        employeeName: appState.currentUser + " (" + appState.employeeId + ")", project: t ? t.projectName : "Trip", category: appState.activeCategory,
-        date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr,
-        paymentType: document.getElementById("fieldPaymentType").value, reason: document.getElementById("travelPurpose").value || document.getElementById("foodReasonSelect").value || document.getElementById("othersReason").value || "Expense",
-        billImage: currentCompressedBill, payImage: currentCompressedPay
+        employeeName: appState.currentUser + " (" + appState.employeeId + ")", 
+        project: t ? t.projectName : "Trip", 
+        category: appState.activeCategory,
+        date: document.getElementById("fieldDate").value, 
+        amount: evaluatedAmt, 
+        amountExpr: amtExpr,
+        paymentType: document.getElementById("fieldPaymentType").value,
+        remarks: document.getElementById("fieldRemarkNotes").value.trim(),
+        billImage: currentCompressedBill, 
+        payImage: currentCompressedPay
       };
       
+      // 2. Attach category-specific data
+      if (appState.activeCategory === "Travel") {
+        payload.origin = document.getElementById("travelOrigin").value.trim();
+        payload.destination = document.getElementById("travelDestination").value.trim();
+        payload.transportMode = document.getElementById("travelTransportMode").value;
+        payload.purpose = document.getElementById("travelPurpose").value.trim();
+        payload.reason = payload.purpose || "Travel";
+      } else if (appState.activeCategory === "Food") {
+        payload.reason = document.getElementById("foodReasonSelect").value || "Food";
+      } else if (appState.activeCategory === "Rent") {
+        payload.roomLocation = document.getElementById("rentLocation").value.trim();
+        payload.rentType = document.getElementById("rentDurationType").value;
+        payload.roomType = document.getElementById("rentRoomType").value;
+        payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")";
+      } else {
+        payload.reason = document.getElementById("othersReason").value.trim() || "Expense";
+      }
+      
+      // 3. Send to Database
       try {
-        const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const r = await fetch(SCRIPT_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify(payload) 
+        });
         const res = await r.json();
-        if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); recalcStatsAndRender(); alert("Saved successfully!"); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;}
-        else { alert("Error: " + res.message); }
-      } catch(err) { alert("Network Error: " + err.message); }
-      finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; }
+        
+        if (res.status === "success") { 
+          appState.expenses.push(payload); 
+          saveStorageData(); 
+          recalcStatsAndRender(); 
+          alert("Saved successfully!"); 
+          document.getElementById("expenseForm").reset(); 
+          currentCompressedBill = null; 
+          currentCompressedPay = null;
+        } else { 
+          alert("Error: " + res.message); 
+        }
+      } catch(err) { 
+        alert("Network Error: " + err.message); 
+      } finally { 
+        btn.disabled = false; 
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; 
+      }
     }
 
     function recalcStatsAndRender() {
