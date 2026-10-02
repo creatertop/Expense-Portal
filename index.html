@@ -4,58 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enterprise Expense & Travel Portal</title>
-  
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- JSZip for ZIP Bundling -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- xlsx-js-style for Colored Excel Export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
     .zoho-red { background-color: #E42528; }
-    .zoho-red-text { color: #E42528; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
   <!-- ========================================== -->
-  <!-- AUTHENTICATION SCREEN (LOGIN) -->
+  <!-- AUTHENTICATION SCREEN (LOGIN & REGISTER) -->
   <!-- ========================================== -->
   <div id="authScreen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl">
-      <div class="flex justify-center mb-6">
+      <div class="flex justify-center mb-4">
         <div class="w-16 h-16 zoho-red rounded-2xl flex items-center justify-center text-white shadow-lg font-bold text-3xl">
           <i class="fa-solid fa-receipt"></i>
         </div>
       </div>
-      <h2 class="text-2xl font-bold text-center text-slate-900 mb-1">Company Portal</h2>
-      <p class="text-center text-sm text-slate-500 mb-8">Sign in to manage your expenses</p>
+      <h2 id="authTitle" class="text-2xl font-bold text-center text-slate-900 mb-1">Company Portal</h2>
+      <p id="authSubtitle" class="text-center text-sm text-slate-500 mb-6">Sign in to manage your expenses</p>
       
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Employee Name</label>
-          <input type="text" id="loginName" required placeholder="e.g. Vempati Likhith" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div id="nameFieldGroup" class="hidden">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Display Name <span class="text-red-500">*</span></label>
+          <input type="text" id="authName" placeholder="e.g. Vempati Likhith" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Email or Employee ID</label>
-          <input type="text" id="loginId" required placeholder="e.g. EMP1234" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email or Employee ID <span class="text-red-500">*</span></label>
+          <input type="text" id="authId" required placeholder="e.g. EMP1234" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Password / PIN</label>
-          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password <span class="text-red-500">*</span></label>
+          <input type="password" id="authPassword" required placeholder="••••••••" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
         </div>
-        <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition flex items-center justify-center mt-2">
+        <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition flex items-center justify-center mt-2">
           Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
         </button>
-        <p class="text-[10px] text-center text-slate-400 mt-4">
-          <i class="fa-solid fa-lock mr-1"></i> Session automatically expires after 1 hour of inactivity.
-        </p>
       </form>
+      
+      <div class="mt-6 text-center border-t border-slate-100 pt-4">
+        <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-sm font-semibold text-slate-600 hover:text-red-600 transition">
+          New employee? Create an account
+        </button>
+      </div>
     </div>
   </div>
 
@@ -63,363 +60,108 @@
   <!-- MAIN APPLICATION (HIDDEN UNTIL LOGGED IN) -->
   <!-- ========================================== -->
   <div id="mainApp" class="hidden flex-col min-h-screen w-full">
-    
-    <!-- TOP NAVIGATION BAR -->
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl">
-            <i class="fa-solid fa-receipt"></i>
-          </div>
+          <div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div>
           <div>
             <h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1>
             <p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p>
           </div>
         </div>
-
         <div class="flex items-center space-x-3">
-          <!-- Role Switcher -->
-          <div class="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs hidden sm:flex">
-            <button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition">
-              <i class="fa-solid fa-user mr-1"></i> Employee
-            </button>
-            <button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition">
-              <i class="fa-solid fa-user-shield mr-1"></i> Finance / Admin
-            </button>
+          <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+            <i class="fa-solid fa-circle-user text-red-400"></i>
+            <span id="navEmployeeName" class="text-xs font-semibold text-slate-200 truncate max-w-[120px]">User</span>
+            <button onclick="openProfileModal()" title="Edit Account Details" class="text-slate-400 hover:text-white text-xs ml-1 transition"><i class="fa-solid fa-pen"></i></button>
           </div>
-
-          <!-- User Badge & Sign Out -->
-          <div class="flex items-center space-x-2">
-            <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-              <i class="fa-solid fa-circle-user text-red-400"></i>
-              <span id="navEmployeeName" class="text-xs font-semibold text-slate-200 truncate max-w-[120px]">User</span>
-              <button onclick="openProfileModal()" title="Edit Account Details" class="text-slate-400 hover:text-white text-xs ml-1 transition">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-            </div>
-            <button onclick="logout()" title="Sign Out" class="bg-slate-800 hover:bg-red-600 border border-slate-700 hover:border-red-600 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition text-xs font-bold flex items-center">
-              <i class="fa-solid fa-right-from-bracket sm:mr-1"></i> <span class="hidden sm:inline">Sign Out</span>
-            </button>
-          </div>
+          <button onclick="logout()" title="Sign Out" class="bg-slate-800 hover:bg-red-600 border border-slate-700 hover:border-red-600 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition text-xs font-bold flex items-center">
+            <i class="fa-solid fa-right-from-bracket sm:mr-1"></i> <span class="hidden sm:inline">Sign Out</span>
+          </button>
         </div>
       </div>
     </header>
 
-    <!-- MAIN DASHBOARD CONTENT -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
-
-      <!-- TRIP SELECTOR & ACTIONS -->
+      <!-- TRIP SELECTOR -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
         <div class="flex flex-wrap items-center gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Current Active Trip</label>
             <div class="flex items-center space-x-2">
-              <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2 font-medium">
-                <!-- Dynamically populated -->
-              </select>
-              <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip Details">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
+              <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-2 font-medium"></select>
+              <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip Details"><i class="fa-solid fa-pen-to-square"></i></button>
             </div>
           </div>
-
           <div class="border-l border-slate-200 pl-4 hidden md:block">
             <div class="text-xs text-slate-500 font-medium">Trip Duration:</div>
             <div id="tripDurationDisplay" class="text-sm font-semibold text-slate-800">--</div>
           </div>
         </div>
-
         <div class="flex items-center space-x-2">
-          <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg flex items-center shadow-sm transition">
-            <i class="fa-solid fa-plus mr-1.5"></i> New Trip
-          </button>
-          <button onclick="exportToStyledExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg flex items-center shadow-sm transition">
-            <i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel
-          </button>
-          <button onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg flex items-center shadow-sm transition">
-            <i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)
-          </button>
-        </div>
-      </div>
-
-      <!-- SUMMARY METRICS CARDS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p>
-            <h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
-          </div>
-          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-list-check"></i>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p>
-            <h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3>
-          </div>
-          <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-indian-rupee-sign"></i>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div class="w-full mr-2">
-            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p>
-            <div class="flex items-center mt-1">
-              <span class="text-lg font-bold text-emerald-600 mr-1">₹</span>
-              <input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed border-emerald-400 focus:outline-none focus:border-emerald-600" value="0" />
-            </div>
-          </div>
-          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-hand-holding-dollar"></i>
-          </div>
-        </div>
-
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p>
-            <h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3>
-            <span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span>
-          </div>
-          <div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl">
-            <i class="fa-solid fa-scale-balanced"></i>
-          </div>
+          <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg flex items-center shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
         </div>
       </div>
 
       <!-- MAIN INTERACTIVE GRID -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- LEFT COLUMN: LOG NEW EXPENSE FORM -->
         <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
           <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-            <h2 class="font-bold text-base text-slate-900 flex items-center">
-              <i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense
-            </h2>
-            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">INR (₹)</span>
+            <h2 class="font-bold text-base text-slate-900 flex items-center"><i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense</h2>
           </div>
-
-          <!-- CATEGORY TABS -->
           <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-lg mb-4 text-xs font-medium">
-            <button type="button" onclick="setExpenseType('Travel')" id="tab-Travel" class="py-2 rounded-md transition text-center shadow-sm bg-white text-red-600 font-bold">
-              <i class="fa-solid fa-plane-departure block sm:inline mb-1 sm:mb-0 sm:mr-1"></i> Travel
-            </button>
-            <button type="button" onclick="setExpenseType('Food')" id="tab-Food" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">
-              <i class="fa-solid fa-utensils block sm:inline mb-1 sm:mb-0 sm:mr-1"></i> Food
-            </button>
-            <button type="button" onclick="setExpenseType('Rent')" id="tab-Rent" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">
-              <i class="fa-solid fa-hotel block sm:inline mb-1 sm:mb-0 sm:mr-1"></i> Rent
-            </button>
-            <button type="button" onclick="setExpenseType('Others')" id="tab-Others" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">
-              <i class="fa-solid fa-receipt block sm:inline mb-1 sm:mb-0 sm:mr-1"></i> Others
-            </button>
+            <button type="button" onclick="setExpenseType('Travel')" id="tab-Travel" class="py-2 rounded-md transition text-center shadow-sm bg-white text-red-600 font-bold">Travel</button>
+            <button type="button" onclick="setExpenseType('Food')" id="tab-Food" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">Food</button>
+            <button type="button" onclick="setExpenseType('Rent')" id="tab-Rent" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">Rent</button>
+            <button type="button" onclick="setExpenseType('Others')" id="tab-Others" class="py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900">Others</button>
           </div>
-
-          <!-- FORM START -->
           <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-            
-            <!-- DATE & AMOUNT -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Expense Date <span class="text-red-500">*</span></label>
-                <input type="date" id="fieldDate" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Amount (₹) <span class="text-red-500">*</span></label>
-                <input type="text" id="fieldAmount" placeholder="e.g. 250 or 93+120" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
-              </div>
+              <div><label class="block text-xs font-bold text-slate-700 mb-1">Expense Date *</label><input type="date" id="fieldDate" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
+              <div><label class="block text-xs font-bold text-slate-700 mb-1">Amount (₹) *</label><input type="text" id="fieldAmount" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
             </div>
-
-            <!-- PAYMENT TYPE & REMARKS -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method / Notes <span class="text-red-500">*</span></label>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method / Notes *</label>
               <div class="grid grid-cols-3 gap-2">
-                <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-red-500 focus:outline-none">
-                  <option value="UPI">UPI</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Credit Card">Card</option>
-                  <option value="UPI + Cash">UPI + Cash</option>
-                  <option value="Company Card">Company Card</option>
-                </select>
-                <input type="text" id="fieldRemarkNotes" placeholder="Optional notes (e.g. with Priyanshu)" class="col-span-2 text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+                <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300"><option>UPI</option><option>Cash</option></select>
+                <input type="text" id="fieldRemarkNotes" class="col-span-2 text-xs p-2.5 rounded-lg border border-slate-300" />
               </div>
             </div>
-
-            <!-- CONDITIONAL: TRAVEL -->
             <div id="fieldsTravel" class="space-y-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Origin <span class="text-red-500">*</span></label>
-                  <input type="text" id="travelOrigin" placeholder="Office / Home" class="w-full text-xs p-2 rounded border border-slate-300" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Destination <span class="text-red-500">*</span></label>
-                  <input type="text" id="travelDestination" placeholder="Client Site" class="w-full text-xs p-2 rounded border border-slate-300" />
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Transport <span class="text-red-500">*</span></label>
-                  <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white">
-                    <option value="Cab">Cab</option>
-                    <option value="Uber">Uber</option>
-                    <option value="Rapido">Rapido</option>
-                    <option value="Bus">Bus</option>
-                    <option value="Metro">Metro</option>
-                    <option value="Train">Train</option>
-                    <option value="Flight">Flight</option>
-                    <option value="Auto">Auto</option>
-                    <option value="Others">Others</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Purpose <span class="text-red-500">*</span></label>
-                  <input type="text" id="travelPurpose" placeholder="e.g. NUB Site" class="w-full text-xs p-2 rounded border border-slate-300" />
-                </div>
-              </div>
+              <input type="text" id="travelOrigin" placeholder="Origin" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+              <input type="text" id="travelDestination" placeholder="Destination" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+              <input type="text" id="travelPurpose" placeholder="Purpose" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+              <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
             </div>
-
-            <!-- CONDITIONAL: FOOD -->
             <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Meal Reason / Type <span class="text-red-500">*</span></label>
-                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white">
-                  <option value="Breakfast">Breakfast</option>
-                  <option value="Lunch">Lunch</option>
-                  <option value="Dinner">Dinner</option>
-                  <option value="Snacks">Snacks</option>
-                  <option value="Client Dinner">Client Dinner</option>
-                  <option value="Custom">Other (Custom Text)</option>
-                </select>
-              </div>
-              <div id="foodCustomReasonDiv" class="hidden">
-                <input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" />
-              </div>
+              <input type="text" id="foodReasonSelect" placeholder="Meal Reason" class="w-full text-xs p-2 rounded border border-slate-300" />
             </div>
-
-            <!-- CONDITIONAL: RENT -->
             <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Location <span class="text-red-500">*</span></label>
-                  <input type="text" id="rentLocation" placeholder="e.g. City Hotel" class="w-full text-xs p-2 rounded border border-slate-300" />
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1">Duration Type <span class="text-red-500">*</span></label>
-                  <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white">
-                    <option value="Per Day">Per Day</option>
-                    <option value="Per Month">Per Month</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Room Type <span class="text-red-500">*</span></label>
-                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white">
-                  <option value="Hotel">Hotel</option>
-                  <option value="Apartment">Apartment</option>
-                  <option value="Guest House">Guest House</option>
-                  <option value="PG">PG</option>
-                </select>
-              </div>
+              <input type="text" id="rentLocation" placeholder="Location" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+              <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per Month</option></select>
+              <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Hotel</option><option>Guest House</option></select>
             </div>
-
-            <!-- CONDITIONAL: OTHERS -->
             <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Description / Reason <span class="text-red-500">*</span></label>
-                <input type="text" id="othersReason" placeholder="e.g. Sensor recharge" class="w-full text-xs p-2 rounded border border-slate-300" />
-              </div>
+              <input type="text" id="othersReason" placeholder="Reason" class="w-full text-xs p-2 rounded border border-slate-300" />
             </div>
-
-            <!-- DUAL ATTACHMENTS (OPTIONAL) -->
             <div class="border-t border-slate-200 pt-3 space-y-3">
-              <label class="block text-xs font-bold text-slate-700">
-                Receipts & Proof <span class="text-slate-400 font-normal">(Optional - JPG/PNG)</span>
-              </label>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <!-- Upload 1: Shop Bill -->
-                <div class="border border-dashed border-slate-300 rounded-lg p-3 text-center bg-slate-50 hover:bg-slate-100 transition relative">
-                  <i class="fa-solid fa-file-invoice text-slate-400 text-lg mb-1"></i>
-                  <div class="text-[11px] font-bold text-slate-700">1. Shop / Hotel Bill</div>
-                  <input type="file" id="fileBill" accept="image/*" onchange="previewImageFile(this, 'billPreviewBox', 'billPreviewImg', 'billPreviewTxt')" class="hidden" />
-                  <button type="button" onclick="document.getElementById('fileBill').click()" class="mt-2 text-[11px] bg-white border border-slate-300 px-2 py-1 rounded text-slate-700 font-medium hover:bg-slate-50 shadow-sm">
-                    Select Bill
-                  </button>
-                  <div id="billPreviewBox" class="hidden mt-2 flex items-center justify-between bg-white p-1 rounded border border-slate-200 text-left">
-                    <div class="flex items-center space-x-1.5 overflow-hidden">
-                      <img id="billPreviewImg" class="w-6 h-6 object-cover rounded" />
-                      <span id="billPreviewTxt" class="text-[9px] truncate max-w-[80px]">bill.jpg</span>
-                    </div>
-                    <button type="button" onclick="clearFile('fileBill', 'billPreviewBox')" class="text-red-500 text-xs px-1"><i class="fa-solid fa-xmark"></i></button>
-                  </div>
-                </div>
-
-                <!-- Upload 2: Payment Screenshot -->
-                <div class="border border-dashed border-slate-300 rounded-lg p-3 text-center bg-slate-50 hover:bg-slate-100 transition relative">
-                  <i class="fa-solid fa-mobile-screen-button text-slate-400 text-lg mb-1"></i>
-                  <div class="text-[11px] font-bold text-slate-700">2. Payment Screenshot</div>
-                  <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'payPreviewBox', 'payPreviewImg', 'payPreviewTxt')" class="hidden" />
-                  <button type="button" onclick="document.getElementById('filePayment').click()" class="mt-2 text-[11px] bg-white border border-slate-300 px-2 py-1 rounded text-slate-700 font-medium hover:bg-slate-50 shadow-sm">
-                    Select Payment
-                  </button>
-                  <div id="payPreviewBox" class="hidden mt-2 flex items-center justify-between bg-white p-1 rounded border border-slate-200 text-left">
-                    <div class="flex items-center space-x-1.5 overflow-hidden">
-                      <img id="payPreviewImg" class="w-6 h-6 object-cover rounded" />
-                      <span id="payPreviewTxt" class="text-[9px] truncate max-w-[80px]">payment.jpg</span>
-                    </div>
-                    <button type="button" onclick="clearFile('filePayment', 'payPreviewBox')" class="text-red-500 text-xs px-1"><i class="fa-solid fa-xmark"></i></button>
-                  </div>
-                </div>
+              <label class="block text-xs font-bold text-slate-700">Receipts (Optional JPG)</label>
+              <div class="grid grid-cols-2 gap-3">
+                <input type="file" id="fileBill" accept="image/*" onchange="previewImageFile(this, 'fileBill')" class="text-[10px]" />
+                <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'filePayment')" class="text-[10px]" />
               </div>
             </div>
-
-            <!-- SUBMIT BUTTON -->
-            <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition flex items-center justify-center text-sm">
-              <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Save & Upload to Drive
-            </button>
+            <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
           </form>
         </div>
-
-        <!-- RIGHT COLUMN: LOGGED EXPENSE ITEMS TABLE -->
-        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
-          <div class="flex flex-wrap items-center justify-between pb-3 border-b border-slate-200 mb-4 gap-2">
-            <div class="flex items-center space-x-2">
-              <h2 class="font-bold text-base text-slate-900">Logged Expense Items</h2>
-              <span id="filteredItemsCountBadge" class="bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">0</span>
-            </div>
-
-            <!-- CATEGORY FILTER -->
-            <div class="flex items-center space-x-2">
-              <span class="text-xs text-slate-500 font-medium">Filter:</span>
-              <select id="categoryFilter" onchange="renderExpenseTable()" class="text-xs p-1.5 rounded-md border border-slate-300 bg-slate-50 focus:ring-red-500 focus:outline-none">
-                <option value="All">All Categories</option>
-                <option value="Travel">Travel Only</option>
-                <option value="Food">Food Only</option>
-                <option value="Rent">Rent Only</option>
-                <option value="Others">Others Only</option>
-              </select>
-              <button onclick="clearCurrentTripExpenses()" class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50" title="Delete all items in this trip">
-                Clear Trip
-              </button>
-            </div>
-          </div>
-
-          <!-- EXPENSE ITEMS LIST -->
-          <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1">
-            <!-- Dynamically populated -->
-          </div>
+        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <h2 class="font-bold text-base text-slate-900 mb-4">Logged Items</h2>
+          <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1"></div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- ========================================== -->
-  <!-- MODALS -->
-  <!-- ========================================== -->
-  
   <!-- PROFILE EDIT MODAL -->
   <div id="profileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
@@ -427,771 +169,251 @@
         <h3 class="text-base font-bold text-slate-900">Edit Account Details</h3>
         <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
-      <form onsubmit="handleProfileSubmit(event)" class="space-y-4">
+      <form id="profileForm" onsubmit="handleProfileSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Display Name</label>
-          <input type="text" id="modalProfileName" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <input type="text" id="modalProfileName" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Employee ID / Email</label>
-          <input type="text" id="modalProfileId" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email / Employee ID</label>
+          <input type="text" id="modalProfileId" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+          <input type="text" id="modalProfilePassword" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
         </div>
         <div class="flex justify-end space-x-2 pt-2">
           <button type="button" onclick="closeProfileModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm">Save Changes</button>
+          <button type="submit" id="btnUpdateProfile" class="px-4 py-2 text-xs font-bold text-white bg-red-600 rounded-lg shadow-sm">Save Changes</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- TRIP CREATE/EDIT MODAL -->
-  <div id="tripModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-      <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
-        <h3 id="modalTripTitle" class="text-base font-bold text-slate-900">Create New Project Trip</h3>
-        <button onclick="closeTripModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-      </div>
-      <form id="tripModalForm" onsubmit="handleTripModalSubmit(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Project Name <span class="text-red-500">*</span></label>
-          <input type="text" id="modalProjectName" required placeholder="e.g. Airport Poc" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Start Date <span class="text-red-500">*</span></label>
-            <input type="date" id="modalStartDate" required class="w-full text-xs p-2 rounded-lg border border-slate-300" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">End Date <span class="text-red-500">*</span></label>
-            <input type="date" id="modalEndDate" required class="w-full text-xs p-2 rounded-lg border border-slate-300" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Initial Advance Amount (₹)</label>
-          <input type="number" id="modalAdvance" placeholder="0" class="w-full text-xs p-2.5 rounded-lg border border-slate-300" />
-        </div>
-        <div class="flex justify-end space-x-2 pt-2">
-          <button type="button" onclick="closeTripModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm">Save Trip</button>
-        </div>
+  <!-- TRIP MODAL -->
+  <div id="tripModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="modalTripTitle" class="font-bold mb-4">Trip Details</h3>
+      <form onsubmit="handleTripModalSubmit(event)" class="space-y-4">
+        <input type="text" id="modalProjectName" required placeholder="Project Name" class="w-full p-2 border rounded" />
+        <input type="date" id="modalStartDate" required class="w-full p-2 border rounded" />
+        <input type="date" id="modalEndDate" required class="w-full p-2 border rounded" />
+        <button type="submit" class="w-full bg-red-600 text-white p-2 rounded">Save Trip</button>
+        <button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500">Cancel</button>
       </form>
     </div>
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- JAVASCRIPT APPLICATION CORE -->
-  <!-- ========================================== -->
   <script>
-    // --- GOOGLE APPS SCRIPT URL ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzywMW2nYQF13Lq3tdjVKQ2e2Ym-OEf6jsh6353P5mMLDlYNYoXHEMjzZv1Xlj-If9Tww/exec";
+    // -------------------------------------------------------------
+    // PASTE YOUR BRAND NEW GOOGLE APPS SCRIPT URL HERE
+    // -------------------------------------------------------------
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq6h-Qj7LR7DCszgj-VTs4ll8K7Kw4QweKlSEmIYsNbRaszS3UgLROKIbv21fwC2DRqg/exec";
 
-    // --- STATE MANAGEMENT ---
     let appState = {
-      currentUser: "Vempati Likhith",
-      employeeId: "EMP123",
-      currentRole: "employee", // 'employee' or 'admin'
-      currentTripId: null,
-      activeCategory: "Travel",
-      trips: [],
-      expenses: []
+      currentUser: "", employeeId: "", password: "", currentTripId: null, activeCategory: "Travel", trips: [], expenses: []
     };
-
     let sessionTimeoutTracker;
-    const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 Hour
+    let authMode = "login"; 
 
-    // --- INITIALIZATION ---
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0];
       checkSession();
     });
 
-    // --- AUTHENTICATION & SESSION LOGIC ---
-    function checkSession() {
-      const expiresAt = localStorage.getItem("expense_session_expiry");
-      if (expiresAt && Date.now() < parseInt(expiresAt)) {
-        // Session is valid
-        loadStorageData();
-        showMainApp();
-        resetSessionTimer();
-      } else {
-        // No session or expired
-        logout(false);
-      }
+    function toggleAuthMode() {
+      authMode = authMode === "login" ? "register" : "login";
+      document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login");
+      document.getElementById("authName").required = authMode === "register";
+      document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account";
+      document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
+      document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Register Account <i class="fa-solid fa-user-plus ml-2"></i>';
+      document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
     }
 
-    function handleLogin(e) {
+    async function handleAuthSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById("loginName").value.trim();
-      const id = document.getElementById("loginId").value.trim();
-      const pass = document.getElementById("loginPassword").value.trim();
+      const btn = document.getElementById("authSubmitBtn");
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+      btn.disabled = true;
 
-      if (name && id && pass) {
-        // Establish Session
-        localStorage.setItem("expense_session_expiry", Date.now() + SESSION_DURATION_MS);
+      const payload = {
+        action: authMode,
+        name: document.getElementById("authName").value.trim(),
+        email: document.getElementById("authId").value.trim(),
+        password: document.getElementById("authPassword").value.trim()
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, // CRITICAL FOR EDGE/CHROME
+          body: JSON.stringify(payload) 
+        });
+        const result = await response.json();
         
-        // Save initial user details
-        appState.currentUser = name;
-        appState.employeeId = id;
-        localStorage.setItem("expense_current_user", name);
-        localStorage.setItem("expense_employee_id", id);
-        
-        loadStorageData();
-        showMainApp();
-        resetSessionTimer();
-        
-        // Clear password field for security
-        document.getElementById("loginPassword").value = "";
-      }
+        if (result.status === "success") {
+          if (authMode === "register") {
+            alert("Account created! Please log in.");
+            toggleAuthMode();
+          } else {
+            appState.currentUser = result.user.name;
+            appState.employeeId = result.user.email;
+            appState.password = result.user.password;
+            localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
+            saveStorageData();
+            showMainApp();
+            document.getElementById("authForm").reset();
+          }
+        } else {
+          alert(result.message);
+        }
+      } catch (err) { alert("Network Error: " + err.message + "\n\n(If it says 'Unexpected token', your Google Deployment permissions are set incorrectly.)"); }
+      finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
-    function logout(manual = true) {
-      localStorage.removeItem("expense_session_expiry");
-      clearTimeout(sessionTimeoutTracker);
-      
-      document.getElementById("mainApp").classList.add("hidden");
-      document.getElementById("mainApp").classList.remove("flex");
-      document.getElementById("authScreen").classList.remove("hidden");
-      
-      if (manual === false) {
-        // It was an auto-timeout
-        alert("Your session has expired due to inactivity. Please log in again.");
-      }
+    function checkSession() {
+      const exp = localStorage.getItem("expense_session_expiry");
+      if (exp && Date.now() < parseInt(exp)) { loadStorageData(); showMainApp(); resetSessionTimer(); }
+      else logout(false);
     }
 
     function resetSessionTimer() {
       clearTimeout(sessionTimeoutTracker);
-      localStorage.setItem("expense_session_expiry", Date.now() + SESSION_DURATION_MS);
-      sessionTimeoutTracker = setTimeout(() => {
-        logout(false);
-      }, SESSION_DURATION_MS);
+      localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
+      sessionTimeoutTracker = setTimeout(() => logout(false), 60 * 60 * 1000);
     }
-
-    // Attach to mouse/keyboard to reset timer on activity
     document.addEventListener("mousemove", () => { if(!document.getElementById("mainApp").classList.contains("hidden")) resetSessionTimer(); });
-    document.addEventListener("keypress", () => { if(!document.getElementById("mainApp").classList.contains("hidden")) resetSessionTimer(); });
+
+    function logout(manual = true) {
+      localStorage.removeItem("expense_session_expiry");
+      document.getElementById("mainApp").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("flex");
+      document.getElementById("authScreen").classList.remove("hidden");
+    }
 
     function showMainApp() {
       document.getElementById("authScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.remove("hidden");
       document.getElementById("mainApp").classList.add("flex");
       document.getElementById("navEmployeeName").innerText = appState.currentUser;
-      initDefaultTripsIfEmpty();
-      renderTripDropdown();
-      setExpenseType("Travel");
-      recalcStatsAndRender();
+      if(appState.trips.length === 0) {
+        appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 });
+        appState.currentTripId = "trip_1"; saveStorageData();
+      }
+      renderTripDropdown(); renderExpenseTable();
     }
 
-
-    // --- PROFILE MODAL ---
+    // --- PROFILE MODAL WITH BACKEND SYNC ---
     function openProfileModal() {
       document.getElementById("modalProfileName").value = appState.currentUser;
       document.getElementById("modalProfileId").value = appState.employeeId;
+      document.getElementById("modalProfilePassword").value = appState.password;
       document.getElementById("profileModal").classList.remove("hidden");
     }
+    function closeProfileModal() { document.getElementById("profileModal").classList.add("hidden"); }
 
-    function closeProfileModal() {
-      document.getElementById("profileModal").classList.add("hidden");
-    }
-
-    function handleProfileSubmit(e) {
+    async function handleProfileSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById("modalProfileName").value.trim();
-      const id = document.getElementById("modalProfileId").value.trim();
-      
-      if (name && id) {
-        appState.currentUser = name;
-        appState.employeeId = id;
-        document.getElementById("navEmployeeName").innerText = name;
-        saveStorageData();
-        renderTripDropdown();
-        recalcStatsAndRender();
-        closeProfileModal();
-      }
+      const btn = document.getElementById("btnUpdateProfile");
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
+
+      const payload = {
+        action: "updateProfile",
+        oldEmail: appState.employeeId,
+        name: document.getElementById("modalProfileName").value.trim(),
+        email: document.getElementById("modalProfileId").value.trim(),
+        password: document.getElementById("modalProfilePassword").value.trim()
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify(payload) 
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+          appState.currentUser = payload.name; appState.employeeId = payload.email; appState.password = payload.password;
+          document.getElementById("navEmployeeName").innerText = payload.name;
+          saveStorageData(); closeProfileModal(); alert("Profile updated in database!");
+        } else alert(result.message);
+      } catch (err) { alert("Network Error: " + err.message); }
+      finally { btn.innerHTML = "Save Changes"; btn.disabled = false; }
     }
 
-
-    // --- LOCAL STORAGE SYNC ---
     function loadStorageData() {
-      const savedUser = localStorage.getItem("expense_current_user");
-      const savedId = localStorage.getItem("expense_employee_id");
-      if (savedUser) appState.currentUser = savedUser;
-      if (savedId) appState.employeeId = savedId;
-
-      const savedTrips = localStorage.getItem("expense_trips");
-      if (savedTrips) { try { appState.trips = JSON.parse(savedTrips); } catch(e) { appState.trips = []; } }
-
-      const savedExpenses = localStorage.getItem("expense_records");
-      if (savedExpenses) { try { appState.expenses = JSON.parse(savedExpenses); } catch(e) { appState.expenses = []; } }
-
-      const activeTrip = localStorage.getItem("expense_active_trip_id");
-      if (activeTrip && appState.trips.some(t => t.id === activeTrip)) {
-        appState.currentTripId = activeTrip;
-      } else if (appState.trips.length > 0) {
-        appState.currentTripId = appState.trips[0].id;
-      }
+      appState.currentUser = localStorage.getItem("expense_current_user");
+      appState.employeeId = localStorage.getItem("expense_employee_id");
+      appState.password = localStorage.getItem("expense_password");
+      try { appState.trips = JSON.parse(localStorage.getItem("expense_trips")) || []; } catch(e){}
+      try { appState.expenses = JSON.parse(localStorage.getItem("expense_records")) || []; } catch(e){}
+      appState.currentTripId = localStorage.getItem("expense_active_trip_id") || (appState.trips[0] ? appState.trips[0].id : null);
     }
-
     function saveStorageData() {
       localStorage.setItem("expense_current_user", appState.currentUser);
       localStorage.setItem("expense_employee_id", appState.employeeId);
+      localStorage.setItem("expense_password", appState.password);
       localStorage.setItem("expense_trips", JSON.stringify(appState.trips));
       localStorage.setItem("expense_records", JSON.stringify(appState.expenses));
-      if (appState.currentTripId) {
-        localStorage.setItem("expense_active_trip_id", appState.currentTripId);
-      }
+      if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
     }
 
-    // --- SEED DEFAULT PROJECT IF EMPTY ---
-    function initDefaultTripsIfEmpty() {
-      if (appState.trips.length === 0) {
-        const defaultTrip = {
-          id: "trip_" + Date.now(),
-          employeeName: appState.currentUser,
-          projectName: "Airport Poc",
-          startDate: new Date().toISOString().split("T")[0],
-          endDate: new Date().toISOString().split("T")[0],
-          advance: 0
-        };
-        appState.trips.push(defaultTrip);
-        appState.currentTripId = defaultTrip.id;
-        saveStorageData();
-      }
-    }
-
-    // --- ROLE SWITCHING ---
-    function switchRole(role) {
-      appState.currentRole = role;
-      const empBtn = document.getElementById("roleEmployeeBtn");
-      const admBtn = document.getElementById("roleAdminBtn");
-      if (role === "admin") {
-        admBtn.className = "px-3 py-1 rounded bg-amber-600 text-white font-medium transition";
-        empBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition";
-      } else {
-        empBtn.className = "px-3 py-1 rounded bg-red-600 text-white font-medium transition";
-        admBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition";
-      }
-      renderTripDropdown();
-      recalcStatsAndRender();
-    }
-
-    // --- TRIP MANAGEMENT ---
     function renderTripDropdown() {
-      const select = document.getElementById("tripSelect");
-      select.innerHTML = "";
-      
-      const visibleTrips = appState.currentRole === "admin" 
-        ? appState.trips 
-        : appState.trips.filter(t => t.employeeName.toLowerCase() === appState.currentUser.toLowerCase());
-
-      if (visibleTrips.length === 0) {
-        select.innerHTML = `<option value="">-- No Trips Available --</option>`;
-        appState.currentTripId = null;
-        updateTripDurationDisplay();
-        return;
-      }
-
-      visibleTrips.forEach(trip => {
-        const opt = document.createElement("option");
-        opt.value = trip.id;
-        opt.textContent = `${trip.projectName} (${trip.employeeName})`;
-        if (trip.id === appState.currentTripId) opt.selected = true;
-        select.appendChild(opt);
-      });
-
-      if (!appState.currentTripId || !visibleTrips.some(t => t.id === appState.currentTripId)) {
-        appState.currentTripId = visibleTrips[0].id;
-      }
-      updateTripDurationDisplay();
+      const sel = document.getElementById("tripSelect"); sel.innerHTML = "";
+      appState.trips.forEach(t => { const opt = document.createElement("option"); opt.value = t.id; opt.textContent = t.projectName; if(t.id === appState.currentTripId) opt.selected=true; sel.appendChild(opt); });
+      const trip = appState.trips.find(t=>t.id===appState.currentTripId);
+      if(trip) document.getElementById("tripDurationDisplay").innerText = `${trip.startDate} to ${trip.endDate}`;
     }
-
-    function onTripChange() {
-      appState.currentTripId = document.getElementById("tripSelect").value;
-      saveStorageData();
-      updateTripDurationDisplay();
-      recalcStatsAndRender();
-    }
-
-    function updateTripDurationDisplay() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const display = document.getElementById("tripDurationDisplay");
-      if (trip && trip.startDate && trip.endDate) {
-        display.innerText = `${trip.startDate}  to  ${trip.endDate}`;
-        document.getElementById("statAdvanceInput").value = trip.advance || 0;
-      } else {
-        display.innerText = "No Trip Selected";
-        document.getElementById("statAdvanceInput").value = 0;
-      }
-    }
-
-    function updateTripAdvance(val) {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      if (trip) {
-        trip.advance = parseFloat(val) || 0;
-        saveStorageData();
-        recalcStatsAndRender();
-      }
-    }
-
-    let isEditingTrip = false;
-    function openTripModal(editMode = false) {
-      isEditingTrip = editMode;
-      const modal = document.getElementById("tripModal");
-      const title = document.getElementById("modalTripTitle");
-      modal.classList.remove("hidden");
-
-      if (editMode && appState.currentTripId) {
-        const trip = appState.trips.find(t => t.id === appState.currentTripId);
-        title.innerText = "Edit Current Trip";
-        document.getElementById("modalProjectName").value = trip.projectName;
-        document.getElementById("modalStartDate").value = trip.startDate;
-        document.getElementById("modalEndDate").value = trip.endDate;
-        document.getElementById("modalAdvance").value = trip.advance || 0;
-      } else {
-        title.innerText = "Create New Project Trip";
-        document.getElementById("tripModalForm").reset();
-        document.getElementById("modalStartDate").value = new Date().toISOString().split("T")[0];
-        document.getElementById("modalEndDate").value = new Date().toISOString().split("T")[0];
-      }
-    }
-
+    function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); renderExpenseTable(); }
+    function openTripModal(edit) { document.getElementById("tripModal").classList.remove("hidden"); }
     function closeTripModal() { document.getElementById("tripModal").classList.add("hidden"); }
-
     function handleTripModalSubmit(e) {
       e.preventDefault();
-      const proj = document.getElementById("modalProjectName").value.trim();
-      const sDate = document.getElementById("modalStartDate").value;
-      const eDate = document.getElementById("modalEndDate").value;
-      const adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
+      const nt = { id: "trip_"+Date.now(), employeeName: appState.currentUser, projectName: document.getElementById("modalProjectName").value, startDate: document.getElementById("modalStartDate").value, endDate: document.getElementById("modalEndDate").value, advance:0 };
+      appState.trips.push(nt); appState.currentTripId = nt.id; saveStorageData(); closeTripModal(); renderTripDropdown();
+    }
+    function setExpenseType(t) { appState.activeCategory = t; ["Travel","Food","Rent","Others"].forEach(x => { document.getElementById(`fields${x}`).classList.toggle("hidden", x!==t); document.getElementById(`tab-${x}`).className = x===t ? "py-2 rounded-md transition text-center shadow-sm bg-white text-red-600 font-bold" : "py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900"; }); }
 
-      if (isEditingTrip && appState.currentTripId) {
-        const trip = appState.trips.find(t => t.id === appState.currentTripId);
-        if (trip) { trip.projectName = proj; trip.startDate = sDate; trip.endDate = eDate; trip.advance = adv; }
-      } else {
-        const newTrip = {
-          id: "trip_" + Date.now(),
-          employeeName: appState.currentUser,
-          projectName: proj,
-          startDate: sDate,
-          endDate: eDate,
-          advance: adv
-        };
-        appState.trips.push(newTrip);
-        appState.currentTripId = newTrip.id;
+    let currentCompressedBill = null, currentCompressedPay = null;
+    async function previewImageFile(input, type) {
+      if(input.files && input.files[0]) {
+        const reader = new FileReader(); reader.readAsDataURL(input.files[0]);
+        reader.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); c.width=600; c.height=(i.height*600)/i.width; c.getContext("2d").drawImage(i,0,0,c.width,c.height); const b64 = c.toDataURL("image/jpeg",0.7); if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; }; };
       }
-      saveStorageData();
-      closeTripModal();
-      renderTripDropdown();
-      updateTripDurationDisplay();
-      recalcStatsAndRender();
-    }
-
-
-    // --- CATEGORY SWITCHING & FORM FIELDS ---
-    function setExpenseType(type) {
-      appState.activeCategory = type;
-      ["Travel", "Food", "Rent", "Others"].forEach(t => {
-        const btn = document.getElementById(`tab-${t}`);
-        const sec = document.getElementById(`fields${t}`);
-        if (t === type) {
-          btn.className = "py-2 rounded-md transition text-center shadow-sm bg-white text-red-600 font-bold";
-          sec.classList.remove("hidden");
-        } else {
-          btn.className = "py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900";
-          sec.classList.add("hidden");
-        }
-      });
-    }
-
-    function handleFoodReasonChange(val) {
-      const customDiv = document.getElementById("foodCustomReasonDiv");
-      if (val === "Custom") { customDiv.classList.remove("hidden"); document.getElementById("foodCustomReason").required = true; }
-      else { customDiv.classList.add("hidden"); document.getElementById("foodCustomReason").required = false; }
-    }
-
-
-    // --- IMAGE PREVIEWS & CLIENT-SIDE COMPRESSION ---
-    let currentCompressedBill = null;
-    let currentCompressedPay = null;
-
-    async function previewImageFile(input, boxId, imgId, txtId) {
-      if (input.files && input.files[0]) {
-        const file = input.files[0];
-        const compressedBase64 = await compressImageToJpeg(file);
-        
-        document.getElementById(imgId).src = compressedBase64;
-        document.getElementById(txtId).innerText = file.name;
-        document.getElementById(boxId).classList.remove("hidden");
-
-        if (input.id === "fileBill") currentCompressedBill = compressedBase64;
-        if (input.id === "filePayment") currentCompressedPay = compressedBase64;
-      }
-    }
-
-    function clearFile(inputId, boxId) {
-      document.getElementById(inputId).value = "";
-      document.getElementById(boxId).classList.add("hidden");
-      if (inputId === "fileBill") currentCompressedBill = null;
-      if (inputId === "filePayment") currentCompressedPay = null;
-    }
-
-    function compressImageToJpeg(file) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            let width = img.width, height = img.height;
-            const maxDim = 1280;
-            if (width > maxDim || height > maxDim) {
-              if (width > height) { height = Math.round((height * maxDim) / width); width = maxDim; }
-              else { width = Math.round((width * maxDim) / height); height = maxDim; }
-            }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL("image/jpeg", 0.72));
-          };
-        };
-      });
-    }
-
-
-    // --- MATH EVALUATION & FORM SUBMISSION (WITH GOOGLE SCRIPT API) ---
-    function evaluateMathAmount(expr) {
-      if (!expr) return 0;
-      const clean = expr.toString().replace(/[^0-9+\-*/.]/g, "");
-      try {
-        const result = Function('"use strict";return (' + clean + ")")();
-        return isNaN(result) ? 0 : parseFloat(result);
-      } catch (e) { return parseFloat(clean) || 0; }
     }
 
     async function handleFormSubmit(e) {
       e.preventDefault();
-      if (!appState.currentTripId) { alert("Please create or select an active trip first!"); return; }
-
-      const dateVal = document.getElementById("fieldDate").value;
-      const amtExpr = document.getElementById("fieldAmount").value.trim();
-      const evaluatedAmt = evaluateMathAmount(amtExpr);
-      const payType = document.getElementById("fieldPaymentType").value;
-      const remarks = document.getElementById("fieldRemarkNotes").value.trim();
-
-      if (!dateVal || evaluatedAmt <= 0) { alert("Please enter a valid Date and Amount!"); return; }
-
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-
-      let payload = {
-        id: "exp_" + Date.now(),
-        tripId: appState.currentTripId,
-        employeeName: appState.currentUser + " (" + appState.employeeId + ")",
-        project: trip ? trip.projectName : "Unknown Project",
-        category: appState.activeCategory,
-        date: dateVal,
-        amountExpr: amtExpr,
-        amount: evaluatedAmt,
-        paymentType: payType,
-        remarks: remarks || payType,
-        billImage: currentCompressedBill,
-        payImage: currentCompressedPay
+      const btn = document.getElementById("btnSaveExpense"); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+      const t = appState.trips.find(x=>x.id===appState.currentTripId);
+      const payload = {
+        action: "addExpense",
+        employeeName: appState.currentUser, project: t ? t.projectName : "Trip", category: appState.activeCategory,
+        date: document.getElementById("fieldDate").value, amount: parseFloat(document.getElementById("fieldAmount").value) || 0,
+        paymentType: document.getElementById("fieldPaymentType").value, reason: document.getElementById("travelPurpose").value || document.getElementById("foodReasonSelect").value || document.getElementById("othersReason").value || "Expense",
+        billImage: currentCompressedBill, payImage: currentCompressedPay
       };
-
-      // Validations
-      if (appState.activeCategory === "Travel") {
-        const orig = document.getElementById("travelOrigin").value.trim();
-        const dest = document.getElementById("travelDestination").value.trim();
-        const purp = document.getElementById("travelPurpose").value.trim();
-        if (!orig || !dest || !purp) { alert("Origin, Destination, and Purpose of Trip are required for Travel!"); return; }
-        payload.origin = orig; payload.destination = dest; payload.purpose = purp;
-        payload.transportMode = document.getElementById("travelTransportMode").value;
-      } else if (appState.activeCategory === "Food") {
-        const rSelect = document.getElementById("foodReasonSelect").value;
-        const foodReason = rSelect === "Custom" ? document.getElementById("foodCustomReason").value.trim() : rSelect;
-        if (!foodReason) { alert("Please specify the meal reason!"); return; }
-        payload.reason = foodReason;
-      } else if (appState.activeCategory === "Rent") {
-        const loc = document.getElementById("rentLocation").value.trim();
-        if (!loc) { alert("Room Location is mandatory for Rent!"); return; }
-        payload.roomLocation = loc;
-        payload.rentType = document.getElementById("rentDurationType").value;
-        payload.roomType = document.getElementById("rentRoomType").value;
-        payload.reason = `${payload.roomLocation} (${payload.roomType} - ${payload.rentType})`;
-      } else if (appState.activeCategory === "Others") {
-        const oReason = document.getElementById("othersReason").value.trim();
-        if (!oReason) { alert("Description/Reason is mandatory for Miscellaneous Expenses!"); return; }
-        payload.reason = oReason;
-      }
-
-      // SUBMIT TO GOOGLE SHEETS
-      const submitBtn = document.getElementById("btnSaveExpense");
-      const originalBtnHtml = submitBtn.innerHTML;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving to Database...';
-      submitBtn.disabled = true;
-
       try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
+        const r = await fetch(SCRIPT_URL, { 
+          method: "POST", 
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
+          body: JSON.stringify(payload) 
         });
-        
-        const result = await response.json();
-        
-        if (result.status === "success") {
-          appState.expenses.push(payload);
-          saveStorageData();
-          
-          document.getElementById("fieldAmount").value = "";
-          document.getElementById("fieldRemarkNotes").value = "";
-          document.getElementById("travelOrigin").value = "";
-          document.getElementById("travelDestination").value = "";
-          document.getElementById("travelPurpose").value = "";
-          document.getElementById("foodCustomReason").value = "";
-          document.getElementById("rentLocation").value = "";
-          document.getElementById("othersReason").value = "";
-          clearFile('fileBill', 'billPreviewBox');
-          clearFile('filePayment', 'payPreviewBox');
-          recalcStatsAndRender();
-        } else {
-          alert("Database Error: " + result.message);
-        }
-      } catch (error) {
-        console.error("Network Error:", error);
-        alert("Failed to connect to Google Sheets. Check your internet connection.");
-      } finally {
-        submitBtn.innerHTML = originalBtnHtml;
-        submitBtn.disabled = false;
-      }
-    }
-
-    function deleteExpense(expId) {
-      if (confirm("Are you sure you want to remove this expense item?")) {
-        appState.expenses = appState.expenses.filter(e => e.id !== expId);
-        saveStorageData();
-        recalcStatsAndRender();
-      }
-    }
-    
-    function clearCurrentTripExpenses() {
-      if (confirm("Clear all logged expense items for this trip?")) {
-        appState.expenses = appState.expenses.filter(e => e.tripId !== appState.currentTripId);
-        saveStorageData();
-        recalcStatsAndRender();
-      }
-    }
-
-    // --- RENDER & STATS CALCULATION ---
-    function recalcStatsAndRender() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = appState.expenses.filter(e => e.tripId === appState.currentTripId);
-
-      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
-      const advance = trip ? (trip.advance || 0) : 0;
-      const net = advance - grandTotal;
-
-      document.getElementById("statTotalItems").innerText = tripExpenses.length;
-      document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
-      document.getElementById("statAdvanceInput").value = advance;
-
-      const netEl = document.getElementById("statNetBalance");
-      const netBadge = document.getElementById("netBalanceBadge");
-      const netIconBg = document.getElementById("netBalanceIconBg");
-
-      if (net > 0) {
-        netEl.className = "text-2xl font-bold text-emerald-600 mt-1";
-        netEl.innerText = `₹${net.toFixed(2)}`;
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700";
-        netBadge.innerText = "Return to Company";
-        netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl";
-      } else if (net < 0) {
-        netEl.className = "text-2xl font-bold text-red-600 mt-1";
-        netEl.innerText = `₹${Math.abs(net).toFixed(2)}`;
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700";
-        netBadge.innerText = "Company Owes You";
-        netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl";
-      } else {
-        netEl.className = "text-2xl font-bold text-slate-700 mt-1";
-        netEl.innerText = `₹0.00`;
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700";
-        netBadge.innerText = "Settled";
-        netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl";
-      }
-
-      renderExpenseTable();
+        const res = await r.json();
+        if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); renderExpenseTable(); alert("Saved successfully!"); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;}
+        else { alert("Error: " + res.message); }
+      } catch(err) { alert("Network Error: " + err.message); }
+      finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; }
     }
 
     function renderExpenseTable() {
-      const filter = document.getElementById("categoryFilter").value;
-      const container = document.getElementById("expenseListContainer");
-      container.innerHTML = "";
-
-      let tripExpenses = appState.expenses.filter(e => e.tripId === appState.currentTripId);
-      if (filter !== "All") tripExpenses = tripExpenses.filter(e => e.category === filter);
-
-      document.getElementById("filteredItemsCountBadge").innerText = tripExpenses.length;
-
-      if (tripExpenses.length === 0) {
-        container.innerHTML = `<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i><p class="text-xs font-medium">No expenses logged in this view.</p></div>`;
-        return;
-      }
-
-      tripExpenses.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-      tripExpenses.forEach(item => {
-        let catColor = "bg-blue-100 text-blue-700", catIcon = "fa-plane-departure";
-        if (item.category === "Food") { catColor = "bg-amber-100 text-amber-700"; catIcon = "fa-utensils"; }
-        if (item.category === "Rent") { catColor = "bg-emerald-100 text-emerald-700"; catIcon = "fa-hotel"; }
-        if (item.category === "Others") { catColor = "bg-purple-100 text-purple-700"; catIcon = "fa-receipt"; }
-
-        let detailsHtml = "";
-        if (item.category === "Travel") {
-          detailsHtml = `<div class="text-xs font-semibold text-slate-900">${item.origin} → ${item.destination} (${item.transportMode})</div><div class="text-[11px] text-slate-500">Purpose: ${item.purpose} | Remark: ${item.remarks}</div>`;
-        } else if (item.category === "Food") {
-          detailsHtml = `<div class="text-xs font-semibold text-slate-900">Reason: ${item.reason}</div><div class="text-[11px] text-slate-500">Payment: ${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>`;
-        } else if (item.category === "Rent") {
-          detailsHtml = `<div class="text-xs font-semibold text-slate-900">${item.roomLocation} (${item.roomType})</div><div class="text-[11px] text-slate-500">${item.rentType} | Payment: ${item.paymentType}</div>`;
-        } else {
-          detailsHtml = `<div class="text-xs font-semibold text-slate-900">${item.reason}</div><div class="text-[11px] text-slate-500">Payment: ${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>`;
-        }
-
-        let attachmentsBadge = "";
-        if (item.billImage && item.payImage) attachmentsBadge = `<span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"><i class="fa-solid fa-check-double mr-1"></i>Bill + Payment</span>`;
-        else if (item.billImage) attachmentsBadge = `<span class="text-[10px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"><i class="fa-solid fa-file-invoice mr-1"></i>Bill Only</span>`;
-        else if (item.payImage) attachmentsBadge = `<span class="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"><i class="fa-solid fa-mobile mr-1"></i>Payment Only</span>`;
-
-        const card = document.createElement("div");
-        card.className = "flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-slate-300 bg-slate-50/50 transition";
-        card.innerHTML = `
-          <div class="flex items-start space-x-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center ${catColor} text-sm mt-0.5"><i class="fa-solid ${catIcon}"></i></div>
-            <div>
-              <div class="flex items-center space-x-2"><span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${catColor}">${item.category}</span><span class="text-[11px] text-slate-500 font-medium">${item.date}</span>${attachmentsBadge}</div>
-              <div class="mt-1">${detailsHtml}</div>
-            </div>
-          </div>
-          <div class="text-right pl-3 flex flex-col items-end">
-            <div class="text-sm font-bold text-slate-900">₹${item.amount.toFixed(2)}</div>
-            ${item.amountExpr && item.amountExpr !== item.amount.toString() ? `<div class="text-[10px] text-slate-400 font-mono">(${item.amountExpr})</div>` : ""}
-            <button onclick="deleteExpense('${item.id}')" class="text-slate-400 hover:text-red-600 text-xs mt-1 transition"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
-        `;
-        container.appendChild(card);
+      const c = document.getElementById("expenseListContainer"); c.innerHTML = "";
+      appState.expenses.filter(e=>e.project === appState.trips.find(t=>t.id===appState.currentTripId)?.projectName).forEach(item => {
+        const d = document.createElement("div"); d.className = "p-3 border-b border-slate-200 flex justify-between";
+        d.innerHTML = `<div><div class="font-bold text-sm">${item.category} - ${item.reason}</div><div class="text-xs text-slate-500">${item.date} | ${item.paymentType}</div></div><div class="font-bold text-red-600">₹${item.amount}</div>`;
+        c.appendChild(d);
       });
-    }
-
-    // --- ZIP EXPORT ---
-    async function downloadOrganizedReceiptsZip() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = appState.expenses.filter(e => e.tripId === appState.currentTripId);
-      const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage);
-      if (itemsWithImages.length === 0) { alert("No receipt bills or payment screenshots have been uploaded for this trip yet!"); return; }
-
-      const zip = new JSZip();
-      const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const rootFolder = zip.folder(`${projClean}_Receipts`);
-
-      const folderMap = {};
-      ["Travel", "Food", "Rent", "Others"].forEach(cat => {
-        folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") };
-      });
-
-      const nameCounters = {};
-      itemsWithImages.forEach(item => {
-        const cat = item.category || "Others";
-        let rawReason = "Receipt";
-        if (cat === "Travel") rawReason = item.purpose || item.transportMode || "Trip";
-        else if (cat === "Food") rawReason = item.reason || "Meal";
-        else if (cat === "Rent") rawReason = item.roomLocation || "Lodging";
-        else rawReason = item.reason || "Expense";
-
-        const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
-        const baseKey = `${item.date}_${cleanReason}`;
-
-        if (!nameCounters[baseKey]) nameCounters[baseKey] = 0;
-        nameCounters[baseKey]++;
-        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
-        const finalFileName = `${baseKey}${suffix}.jpg`;
-
-        if (item.billImage && item.billImage.startsWith("data:image")) folderMap[cat].bills.file(finalFileName, item.billImage.split(",")[1], { base64: true });
-        if (item.payImage && item.payImage.startsWith("data:image")) folderMap[cat].payments.file(finalFileName, item.payImage.split(",")[1], { base64: true });
-      });
-
-      const blob = await zip.generateAsync({ type: "blob" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${projClean}_Receipts.zip`;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    }
-
-    // --- EXCEL EXPORT ---
-    function exportToStyledExcel() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = appState.expenses.filter(e => e.tripId === appState.currentTripId);
-      const projName = trip ? trip.projectName : "Trip Expenses";
-
-      const travelItems = tripExpenses.filter(e => e.category === "Travel");
-      const foodItems = tripExpenses.filter(e => e.category === "Food");
-      const miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
-
-      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0);
-      const foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0);
-      const miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0);
-      const grandTotal = travelSum + foodSum + miscSum;
-      const advance = trip ? (trip.advance || 0) : 0;
-
-      const fontCalibri = { name: "Calibri", sz: 11 };
-      const borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
-      const styleTitle = { font: { name: "Calibri", sz: 14, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
-      const styleBannerOrange = { fill: { fgColor: { rgb: "F79646" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleHeaderBlue = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: borderThin };
-      const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-
-      const wb = XLSX.utils.book_new(); const ws = {}; const merges = [];
-      function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
-
-      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 7 } });
-
-      let r = 3;
-      setCell(r, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 7 } }); r++;
-      const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks"];
-      travelHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (travelItems.length === 0) { [0,1,2,3,4,5,7].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 6, 0, styleAmountGreen); r++; }
-      else { travelItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.purpose||"-",styleDataCell); setCell(r,2,item.origin||"-",styleDataCell); setCell(r,3,item.destination||"-",styleDataCell); setCell(r,4,item.transportMode||"-",styleDataCell); setCell(r,5,item.amountExpr||item.amount,styleDataCell); setCell(r,6,item.amount,styleAmountGreen); setCell(r,7,item.remarks||item.paymentType||"-",styleDataCell); r++; }); }
-      setCell(r, 5, "Total", styleTotalRed); setCell(r, 6, travelSum, styleTotalRed); r += 2;
-
-      setCell(r, 0, "Food Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 4 } }); r++;
-      const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total"];
-      foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (foodItems.length === 0) { [0,1,2,3].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; }
-      else { foodItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); r++; }); }
-      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, foodSum, styleTotalRed); r += 2;
-
-      setCell(r, 0, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 4 } }); r++;
-      foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (miscItems.length === 0) { [0,1,2,3].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; }
-      else { miscItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); r++; }); }
-      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, miscSum, styleTotalRed);
-
-      let rightR = 14;
-      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Advance", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
-      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, trip ? trip.employeeName : appState.currentUser, styleSummaryGold); setCell(rightR, 8, advance, styleAmountGreen); rightR += 2;
-
-      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Remark", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
-      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, "Travel Expenses", styleSummaryGold); setCell(rightR, 8, travelSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, 2, styleSummaryGold); setCell(rightR, 7, "Food Expenses", styleSummaryGold); setCell(rightR, 8, foodSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, 3, styleSummaryGold); setCell(rightR, 7, "Miscellaneous Expenses", styleSummaryGold); setCell(rightR, 8, miscSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, "", styleTotalRed); setCell(rightR, 7, "Total", styleTotalRed); setCell(rightR, 8, grandTotal, styleTotalRed);
-
-      ws["!cols"] = [{ wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 22 }, { wch: 14 }];
-      ws["!merges"] = merges; ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(r, rightR) + 2, c: 8 } });
-      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report");
-      XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
     }
   </script>
 </body>
