@@ -79,6 +79,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+      <!-- TRIP SELECTOR -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
         <div class="flex flex-wrap items-center gap-4">
           <div>
@@ -100,6 +101,54 @@
         </div>
       </div>
 
+      <!-- SUMMARY METRICS CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p>
+            <h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          </div>
+          <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p>
+            <h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3>
+          </div>
+          <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div class="w-full mr-2">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p>
+            <div class="flex items-center mt-1">
+              <span class="text-lg font-bold text-emerald-600 mr-1">₹</span>
+              <input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed border-emerald-400 focus:outline-none focus:border-emerald-600" value="0" />
+            </div>
+          </div>
+          <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p>
+            <h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3>
+            <span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span>
+          </div>
+          <div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl">
+            <i class="fa-solid fa-scale-balanced"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN INTERACTIVE GRID -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
           <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
@@ -151,7 +200,12 @@
           </form>
         </div>
         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 class="font-bold text-base text-slate-900 mb-4">Logged Items</h2>
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+            <h2 class="font-bold text-base text-slate-900">Logged Items</h2>
+            <div class="flex space-x-2">
+              <select id="categoryFilter" onchange="renderExpenseTable()" class="text-xs p-1.5 rounded-md border border-slate-300"><option value="All">All Categories</option><option value="Travel">Travel</option><option value="Food">Food</option><option value="Rent">Rent</option><option value="Others">Others</option></select>
+            </div>
+          </div>
           <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1"></div>
         </div>
       </div>
@@ -197,6 +251,7 @@
         <input type="text" id="modalProjectName" required placeholder="Project Name" class="w-full p-2 border rounded" />
         <input type="date" id="modalStartDate" required class="w-full p-2 border rounded" />
         <input type="date" id="modalEndDate" required class="w-full p-2 border rounded" />
+        <input type="number" id="modalAdvance" placeholder="Advance Amount" class="w-full p-2 border rounded" />
         <button type="submit" class="w-full bg-red-600 text-white p-2 rounded">Save Trip</button>
         <button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500">Cancel</button>
       </form>
@@ -248,7 +303,6 @@
         password: document.getElementById("authPassword").value.trim()
       };
       
-      // For login, we only send the ID field as "loginId" since it can be email OR empId
       if (authMode === "login") {
         payload.loginId = document.getElementById("authId").value.trim();
       }
@@ -308,7 +362,7 @@
         appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 });
         appState.currentTripId = "trip_1"; saveStorageData();
       }
-      renderTripDropdown(); renderExpenseTable();
+      renderTripDropdown(); recalcStatsAndRender();
     }
 
     // --- PROFILE MODAL WITH BACKEND SYNC ---
@@ -371,15 +425,51 @@
       appState.trips.forEach(t => { const opt = document.createElement("option"); opt.value = t.id; opt.textContent = t.projectName; if(t.id === appState.currentTripId) opt.selected=true; sel.appendChild(opt); });
       const trip = appState.trips.find(t=>t.id===appState.currentTripId);
       if(trip) document.getElementById("tripDurationDisplay").innerText = `${trip.startDate} to ${trip.endDate}`;
+      
+      const advInput = document.getElementById("statAdvanceInput");
+      if(advInput) advInput.value = trip ? (trip.advance || 0) : 0;
     }
-    function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); renderExpenseTable(); }
-    function openTripModal(edit) { document.getElementById("tripModal").classList.remove("hidden"); }
+    
+    function updateTripAdvance(val) {
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      if (trip) { trip.advance = parseFloat(val) || 0; saveStorageData(); recalcStatsAndRender(); }
+    }
+
+    function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); recalcStatsAndRender(); }
+    function openTripModal(edit) {
+      if(edit && appState.currentTripId) {
+        const t = appState.trips.find(x=>x.id===appState.currentTripId);
+        document.getElementById("modalProjectName").value = t.projectName;
+        document.getElementById("modalStartDate").value = t.startDate;
+        document.getElementById("modalEndDate").value = t.endDate;
+        document.getElementById("modalAdvance").value = t.advance || 0;
+      } else {
+        document.getElementById("modalProjectName").value = "";
+        document.getElementById("modalAdvance").value = "";
+      }
+      document.getElementById("tripModal").classList.remove("hidden"); 
+    }
     function closeTripModal() { document.getElementById("tripModal").classList.add("hidden"); }
+    
     function handleTripModalSubmit(e) {
       e.preventDefault();
-      const nt = { id: "trip_"+Date.now(), employeeName: appState.currentUser, projectName: document.getElementById("modalProjectName").value, startDate: document.getElementById("modalStartDate").value, endDate: document.getElementById("modalEndDate").value, advance:0 };
-      appState.trips.push(nt); appState.currentTripId = nt.id; saveStorageData(); closeTripModal(); renderTripDropdown();
+      const proj = document.getElementById("modalProjectName").value;
+      const sd = document.getElementById("modalStartDate").value;
+      const ed = document.getElementById("modalEndDate").value;
+      const adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
+
+      const existing = appState.trips.find(t => t.id === appState.currentTripId);
+      if (existing && document.getElementById("modalProjectName").value !== "") {
+        // Edit mode
+        existing.projectName = proj; existing.startDate = sd; existing.endDate = ed; existing.advance = adv;
+      } else {
+        // Create mode
+        const nt = { id: "trip_"+Date.now(), employeeName: appState.currentUser, projectName: proj, startDate: sd, endDate: ed, advance: adv };
+        appState.trips.push(nt); appState.currentTripId = nt.id;
+      }
+      saveStorageData(); closeTripModal(); renderTripDropdown(); recalcStatsAndRender();
     }
+    
     function setExpenseType(t) { appState.activeCategory = t; ["Travel","Food","Rent","Others"].forEach(x => { document.getElementById(`fields${x}`).classList.toggle("hidden", x!==t); document.getElementById(`tab-${x}`).className = x===t ? "py-2 rounded-md transition text-center shadow-sm bg-white text-red-600 font-bold" : "py-2 rounded-md transition text-center text-slate-600 hover:text-slate-900"; }); }
 
     let currentCompressedBill = null, currentCompressedPay = null;
@@ -390,36 +480,186 @@
       }
     }
 
+    function evaluateMathAmount(expr) {
+      if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, "");
+      try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } 
+      catch (e) { return parseFloat(clean) || 0; }
+    }
+
     async function handleFormSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById("btnSaveExpense"); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
       const t = appState.trips.find(x=>x.id===appState.currentTripId);
+      
+      const amtExpr = document.getElementById("fieldAmount").value.trim();
+      const evaluatedAmt = evaluateMathAmount(amtExpr);
+      
       const payload = {
         action: "addExpense",
         employeeName: appState.currentUser + " (" + appState.employeeId + ")", project: t ? t.projectName : "Trip", category: appState.activeCategory,
-        date: document.getElementById("fieldDate").value, amount: parseFloat(document.getElementById("fieldAmount").value) || 0,
+        date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr,
         paymentType: document.getElementById("fieldPaymentType").value, reason: document.getElementById("travelPurpose").value || document.getElementById("foodReasonSelect").value || document.getElementById("othersReason").value || "Expense",
         billImage: currentCompressedBill, payImage: currentCompressedPay
       };
+      
       try {
         const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const res = await r.json();
-        if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); renderExpenseTable(); alert("Saved successfully!"); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;}
+        if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); recalcStatsAndRender(); alert("Saved successfully!"); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;}
         else { alert("Error: " + res.message); }
       } catch(err) { alert("Network Error: " + err.message); }
       finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; }
     }
 
+    function recalcStatsAndRender() {
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
+
+      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const advance = trip ? (trip.advance || 0) : 0;
+      const net = advance - grandTotal;
+
+      document.getElementById("statTotalItems").innerText = tripExpenses.length;
+      document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
+      
+      const netEl = document.getElementById("statNetBalance");
+      const netBadge = document.getElementById("netBalanceBadge");
+      const netIconBg = document.getElementById("netBalanceIconBg");
+
+      if (net > 0) {
+        netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`;
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company";
+        netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl";
+      } else if (net < 0) {
+        netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`;
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You";
+        netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl";
+      } else {
+        netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`;
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled";
+        netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl";
+      }
+
+      renderExpenseTable();
+    }
+
     function renderExpenseTable() {
       const c = document.getElementById("expenseListContainer"); c.innerHTML = "";
-      appState.expenses.filter(e=>e.project === appState.trips.find(t=>t.id===appState.currentTripId)?.projectName).forEach(item => {
+      const filter = document.getElementById("categoryFilter").value;
+      const trip = appState.trips.find(t=>t.id===appState.currentTripId);
+      
+      let items = appState.expenses.filter(e=>e.project === (trip ? trip.projectName : ""));
+      if(filter !== "All") items = items.filter(e=>e.category === filter);
+      
+      items.forEach(item => {
         const d = document.createElement("div"); d.className = "p-3 border-b border-slate-200 flex justify-between";
         d.innerHTML = `<div><div class="font-bold text-sm">${item.category} - ${item.reason}</div><div class="text-xs text-slate-500">${item.date} | ${item.paymentType}</div></div><div class="font-bold text-red-600">₹${item.amount}</div>`;
         c.appendChild(d);
       });
     }
 
-    // ZIP and EXCEL export functions omitted for length in this block, but they remain intact from previous versions.
+    async function downloadOrganizedReceiptsZip() {
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
+      const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage);
+      if (itemsWithImages.length === 0) { alert("No receipt bills or payment screenshots have been uploaded for this trip yet!"); return; }
+
+      const zip = new JSZip();
+      const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const rootFolder = zip.folder(`${projClean}_Receipts`);
+
+      const folderMap = {};
+      ["Travel", "Food", "Rent", "Others"].forEach(cat => {
+        folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") };
+      });
+
+      const nameCounters = {};
+      itemsWithImages.forEach(item => {
+        const cat = item.category || "Others";
+        let rawReason = item.reason || "Expense";
+        const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
+        const baseKey = `${item.date}_${cleanReason}`;
+
+        if (!nameCounters[baseKey]) nameCounters[baseKey] = 0;
+        nameCounters[baseKey]++;
+        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
+        const finalFileName = `${baseKey}${suffix}.jpg`;
+
+        if (item.billImage && item.billImage.startsWith("data:image")) folderMap[cat].bills.file(finalFileName, item.billImage.split(",")[1], { base64: true });
+        if (item.payImage && item.payImage.startsWith("data:image")) folderMap[cat].payments.file(finalFileName, item.payImage.split(",")[1], { base64: true });
+      });
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    }
+
+    function exportToStyledExcel() {
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
+      const projName = trip ? trip.projectName : "Trip Expenses";
+
+      const travelItems = tripExpenses.filter(e => e.category === "Travel");
+      const foodItems = tripExpenses.filter(e => e.category === "Food");
+      const miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
+
+      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0);
+      const foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0);
+      const miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0);
+      const grandTotal = travelSum + foodSum + miscSum;
+      const advance = trip ? (trip.advance || 0) : 0;
+
+      const fontCalibri = { name: "Calibri", sz: 11 };
+      const borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
+      const styleTitle = { font: { name: "Calibri", sz: 14, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
+      const styleBannerOrange = { fill: { fgColor: { rgb: "F79646" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleHeaderBlue = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: borderThin };
+      const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+
+      const wb = XLSX.utils.book_new(); const ws = {}; const merges = [];
+      function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
+
+      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 7 } });
+
+      let r = 3;
+      setCell(r, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 7 } }); r++;
+      const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks"];
+      travelHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
+      if (travelItems.length === 0) { [0,1,2,3,4,5,7].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 6, 0, styleAmountGreen); r++; }
+      else { travelItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.purpose||"-",styleDataCell); setCell(r,2,item.origin||"-",styleDataCell); setCell(r,3,item.destination||"-",styleDataCell); setCell(r,4,item.transportMode||"-",styleDataCell); setCell(r,5,item.amountExpr||item.amount,styleDataCell); setCell(r,6,item.amount,styleAmountGreen); setCell(r,7,item.remarks||item.paymentType||"-",styleDataCell); r++; }); }
+      setCell(r, 5, "Total", styleTotalRed); setCell(r, 6, travelSum, styleTotalRed); r += 2;
+
+      setCell(r, 0, "Food Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 4 } }); r++;
+      const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total"];
+      foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
+      if (foodItems.length === 0) { [0,1,2,3].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; }
+      else { foodItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); r++; }); }
+      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, foodSum, styleTotalRed); r += 2;
+
+      setCell(r, 0, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 4 } }); r++;
+      foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
+      if (miscItems.length === 0) { [0,1,2,3].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; }
+      else { miscItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); r++; }); }
+      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, miscSum, styleTotalRed);
+
+      let rightR = 14;
+      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Advance", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
+      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, trip ? trip.employeeName : appState.currentUser, styleSummaryGold); setCell(rightR, 8, advance, styleAmountGreen); rightR += 2;
+
+      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Remark", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
+      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, "Travel Expenses", styleSummaryGold); setCell(rightR, 8, travelSum, styleAmountGreen); rightR++;
+      setCell(rightR, 6, 2, styleSummaryGold); setCell(rightR, 7, "Food Expenses", styleSummaryGold); setCell(rightR, 8, foodSum, styleAmountGreen); rightR++;
+      setCell(rightR, 6, 3, styleSummaryGold); setCell(rightR, 7, "Miscellaneous Expenses", styleSummaryGold); setCell(rightR, 8, miscSum, styleAmountGreen); rightR++;
+      setCell(rightR, 6, "", styleTotalRed); setCell(rightR, 7, "Total", styleTotalRed); setCell(rightR, 8, grandTotal, styleTotalRed);
+
+      ws["!cols"] = [{ wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 22 }, { wch: 14 }];
+      ws["!merges"] = merges; ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(r, rightR) + 2, c: 8 } });
+      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report");
+      XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
+    }
   </script>
 </body>
 </html>
