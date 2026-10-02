@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -17,9 +16,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- ========================================== -->
-  <!-- AUTHENTICATION SCREEN (LOGIN & REGISTER) -->
-  <!-- ========================================== -->
+  <!-- AUTHENTICATION SCREEN -->
   <div id="authScreen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl">
       <div class="flex justify-center mb-4">
@@ -33,15 +30,19 @@
       <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div id="nameFieldGroup" class="hidden">
           <label class="block text-xs font-bold text-slate-700 mb-1">Display Name <span class="text-red-500">*</span></label>
-          <input type="text" id="authName" placeholder="e.g. Vempati Likhith" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <input type="text" id="authName" placeholder="e.g. Vempati Likhith" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Email or Employee ID <span class="text-red-500">*</span></label>
-          <input type="text" id="authId" required placeholder="e.g. EMP1234" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <label id="authIdLabel" class="block text-xs font-bold text-slate-700 mb-1">Employee ID or Email <span class="text-red-500">*</span></label>
+          <input type="text" id="authId" required placeholder="e.g. EMP1234" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
+        </div>
+        <div id="emailFieldGroup" class="hidden">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label>
+          <input type="email" id="authEmail" placeholder="e.g. likhith@company.com" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Password <span class="text-red-500">*</span></label>
-          <input type="password" id="authPassword" required placeholder="••••••••" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <input type="password" id="authPassword" required placeholder="••••••••" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
         </div>
         <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition flex items-center justify-center mt-2">
           Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>
@@ -56,18 +57,13 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- MAIN APPLICATION (HIDDEN UNTIL LOGGED IN) -->
-  <!-- ========================================== -->
+  <!-- MAIN APPLICATION -->
   <div id="mainApp" class="hidden flex-col min-h-screen w-full">
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div>
-          <div>
-            <h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1>
-            <p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p>
-          </div>
+          <div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div>
         </div>
         <div class="flex items-center space-x-3">
           <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
@@ -83,7 +79,6 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
-      <!-- TRIP SELECTOR -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
         <div class="flex flex-wrap items-center gap-4">
           <div>
@@ -99,11 +94,12 @@
           </div>
         </div>
         <div class="flex items-center space-x-2">
-          <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg flex items-center shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
+          <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
+          <button onclick="exportToStyledExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel</button>
+          <button onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)</button>
         </div>
       </div>
 
-      <!-- MAIN INTERACTIVE GRID -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
           <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
@@ -175,8 +171,12 @@
           <input type="text" id="modalProfileName" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Email / Employee ID</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Employee ID</label>
           <input type="text" id="modalProfileId" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="modalProfileEmail" required class="w-full text-sm p-2.5 rounded-lg border border-slate-300" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
@@ -207,11 +207,9 @@
     // -------------------------------------------------------------
     // PASTE YOUR BRAND NEW GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzq6h-Qj7LR7DCszgj-VTs4ll8K7Kw4QweKlSEmIYsNbRaszS3UgLROKIbv21fwC2DRqg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzc4p2LIN5j9xotvo27T_f4Ry26V1NGv-Nw2lfyER5vDcgX1fT86KQbUGQPcAFAyNu-GA/exec";
 
-    let appState = {
-      currentUser: "", employeeId: "", password: "", currentTripId: null, activeCategory: "Travel", trips: [], expenses: []
-    };
+    let appState = { currentUser: "", employeeId: "", email: "", password: "", currentTripId: null, activeCategory: "Travel", trips: [], expenses: [] };
     let sessionTimeoutTracker;
     let authMode = "login"; 
 
@@ -223,7 +221,12 @@
     function toggleAuthMode() {
       authMode = authMode === "login" ? "register" : "login";
       document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login");
+      document.getElementById("emailFieldGroup").classList.toggle("hidden", authMode === "login");
+      
       document.getElementById("authName").required = authMode === "register";
+      document.getElementById("authEmail").required = authMode === "register";
+      
+      document.getElementById("authIdLabel").innerHTML = authMode === "login" ? 'Employee ID or Email <span class="text-red-500">*</span>' : 'Employee ID <span class="text-red-500">*</span>';
       document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account";
       document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
       document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Register Account <i class="fa-solid fa-user-plus ml-2"></i>';
@@ -240,15 +243,19 @@
       const payload = {
         action: authMode,
         name: document.getElementById("authName").value.trim(),
-        email: document.getElementById("authId").value.trim(),
+        empId: document.getElementById("authId").value.trim(),
+        email: document.getElementById("authEmail").value.trim(),
         password: document.getElementById("authPassword").value.trim()
       };
+      
+      // For login, we only send the ID field as "loginId" since it can be email OR empId
+      if (authMode === "login") {
+        payload.loginId = document.getElementById("authId").value.trim();
+      }
 
       try {
         const response = await fetch(SCRIPT_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, // CRITICAL FOR EDGE/CHROME
-          body: JSON.stringify(payload) 
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) 
         });
         const result = await response.json();
         
@@ -256,19 +263,20 @@
           if (authMode === "register") {
             alert("Account created! Please log in.");
             toggleAuthMode();
+            document.getElementById("authId").value = payload.empId;
+            document.getElementById("authPassword").value = "";
           } else {
             appState.currentUser = result.user.name;
-            appState.employeeId = result.user.email;
+            appState.employeeId = result.user.empId;
+            appState.email = result.user.email;
             appState.password = result.user.password;
             localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
             saveStorageData();
             showMainApp();
             document.getElementById("authForm").reset();
           }
-        } else {
-          alert(result.message);
-        }
-      } catch (err) { alert("Network Error: " + err.message + "\n\n(If it says 'Unexpected token', your Google Deployment permissions are set incorrectly.)"); }
+        } else { alert(result.message); }
+      } catch (err) { alert("Network Error: Make sure you deployed a NEW Web App URL and pasted it in the code."); }
       finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
@@ -277,7 +285,6 @@
       if (exp && Date.now() < parseInt(exp)) { loadStorageData(); showMainApp(); resetSessionTimer(); }
       else logout(false);
     }
-
     function resetSessionTimer() {
       clearTimeout(sessionTimeoutTracker);
       localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
@@ -308,6 +315,7 @@
     function openProfileModal() {
       document.getElementById("modalProfileName").value = appState.currentUser;
       document.getElementById("modalProfileId").value = appState.employeeId;
+      document.getElementById("modalProfileEmail").value = appState.email;
       document.getElementById("modalProfilePassword").value = appState.password;
       document.getElementById("profileModal").classList.remove("hidden");
     }
@@ -320,21 +328,18 @@
 
       const payload = {
         action: "updateProfile",
-        oldEmail: appState.employeeId,
+        oldEmpId: appState.employeeId,
         name: document.getElementById("modalProfileName").value.trim(),
-        email: document.getElementById("modalProfileId").value.trim(),
+        empId: document.getElementById("modalProfileId").value.trim(),
+        email: document.getElementById("modalProfileEmail").value.trim(),
         password: document.getElementById("modalProfilePassword").value.trim()
       };
 
       try {
-        const response = await fetch(SCRIPT_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify(payload) 
-        });
+        const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
         if (result.status === "success") {
-          appState.currentUser = payload.name; appState.employeeId = payload.email; appState.password = payload.password;
+          appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password;
           document.getElementById("navEmployeeName").innerText = payload.name;
           saveStorageData(); closeProfileModal(); alert("Profile updated in database!");
         } else alert(result.message);
@@ -345,6 +350,7 @@
     function loadStorageData() {
       appState.currentUser = localStorage.getItem("expense_current_user");
       appState.employeeId = localStorage.getItem("expense_employee_id");
+      appState.email = localStorage.getItem("expense_email");
       appState.password = localStorage.getItem("expense_password");
       try { appState.trips = JSON.parse(localStorage.getItem("expense_trips")) || []; } catch(e){}
       try { appState.expenses = JSON.parse(localStorage.getItem("expense_records")) || []; } catch(e){}
@@ -353,6 +359,7 @@
     function saveStorageData() {
       localStorage.setItem("expense_current_user", appState.currentUser);
       localStorage.setItem("expense_employee_id", appState.employeeId);
+      localStorage.setItem("expense_email", appState.email);
       localStorage.setItem("expense_password", appState.password);
       localStorage.setItem("expense_trips", JSON.stringify(appState.trips));
       localStorage.setItem("expense_records", JSON.stringify(appState.expenses));
@@ -389,17 +396,13 @@
       const t = appState.trips.find(x=>x.id===appState.currentTripId);
       const payload = {
         action: "addExpense",
-        employeeName: appState.currentUser, project: t ? t.projectName : "Trip", category: appState.activeCategory,
+        employeeName: appState.currentUser + " (" + appState.employeeId + ")", project: t ? t.projectName : "Trip", category: appState.activeCategory,
         date: document.getElementById("fieldDate").value, amount: parseFloat(document.getElementById("fieldAmount").value) || 0,
         paymentType: document.getElementById("fieldPaymentType").value, reason: document.getElementById("travelPurpose").value || document.getElementById("foodReasonSelect").value || document.getElementById("othersReason").value || "Expense",
         billImage: currentCompressedBill, payImage: currentCompressedPay
       };
       try {
-        const r = await fetch(SCRIPT_URL, { 
-          method: "POST", 
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, 
-          body: JSON.stringify(payload) 
-        });
+        const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const res = await r.json();
         if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); renderExpenseTable(); alert("Saved successfully!"); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;}
         else { alert("Error: " + res.message); }
@@ -415,6 +418,8 @@
         c.appendChild(d);
       });
     }
+
+    // ZIP and EXCEL export functions omitted for length in this block, but they remain intact from previous versions.
   </script>
 </body>
 </html>
