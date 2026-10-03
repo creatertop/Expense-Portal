@@ -217,7 +217,7 @@
       document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
     }
 
-    async function handleAuthSubmit(e) {
+async function handleAuthSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...'; btn.disabled = true;
@@ -235,22 +235,44 @@
             toggleAuthMode();
             document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = "";
           } else {
-            appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password;
-            appState.userRole = result.user.role || "Employee";
+            // FORCE STATE OVERWRITE
+            appState.currentUser = result.user.name; 
+            appState.employeeId = result.user.empId; 
+            appState.email = result.user.email; 
+            appState.password = result.user.password;
             
+            // Critical fix: Ensure role is pulled freshly from the DB every time
+            appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
+            
+            // RBAC: Show Admin toggle only if user is strictly "Admin"
             if(appState.userRole === "Admin") {
-              document.getElementById("adminControlsContainer").classList.remove("hidden"); document.getElementById("adminControlsContainer").classList.add("flex");
+              document.getElementById("adminControlsContainer").classList.remove("hidden"); 
+              document.getElementById("adminControlsContainer").classList.add("flex");
+              appState.currentRole = "admin"; // Default Admins to admin view
             } else {
-              document.getElementById("adminControlsContainer").classList.add("hidden"); document.getElementById("adminControlsContainer").classList.remove("flex");
+              document.getElementById("adminControlsContainer").classList.add("hidden"); 
+              document.getElementById("adminControlsContainer").classList.remove("flex");
+              appState.currentRole = "employee"; // Force non-admins to employee view
             }
 
             appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : [];
             appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : [];
-            appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
+            appState.trips = [...appState.personalTrips]; 
+            appState.expenses = [...appState.personalExpenses];
             appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
             
             localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
-            saveStorageData(); showMainApp(); document.getElementById("authForm").reset();
+            saveStorageData(); 
+            
+            // If they are an admin, fetch company data immediately upon login
+            if(appState.userRole === "Admin") {
+              showMainApp();
+              await fetchAllCompanyData();
+            } else {
+              showMainApp();
+            }
+            
+            document.getElementById("authForm").reset();
           }
         } else alert(result.message);
       } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 315."); }
