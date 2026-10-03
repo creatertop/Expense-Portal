@@ -408,12 +408,22 @@
       e.preventDefault();
       const proj = document.getElementById("modalProjectName").value.trim(), sd = document.getElementById("modalStartDate").value, ed = document.getElementById("modalEndDate").value, adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
       let tripObj = null, oldName = null; const existing = appState.trips.find(t => t.id === appState.currentTripId);
+      
+      // CRITICAL FIX: If Admin is editing, keep the original employee's name. If creating, use Admin's name.
+      let targetEmployee = appState.currentUser;
+      if (appState.currentRole === "admin" && existing) {
+        targetEmployee = existing.employeeName;
+      }
+
       if (existing && document.getElementById("modalTripTitle").innerText.includes("Edit")) {
         oldName = existing.projectName; existing.projectName = proj; existing.startDate = sd; existing.endDate = ed; existing.advance = adv; tripObj = existing;
         if(oldName !== proj) appState.expenses.forEach(exp => { if(exp.project === oldName) exp.project = proj; });
       } else {
-        tripObj = { id: "trip_"+Date.now(), employeeName: appState.currentUser, projectName: proj, startDate: sd, endDate: ed, advance: adv }; appState.trips.push(tripObj); appState.currentTripId = tripObj.id;
+        tripObj = { id: "trip_"+Date.now(), employeeName: targetEmployee, projectName: proj, startDate: sd, endDate: ed, advance: adv }; 
+        appState.trips.push(tripObj); 
+        appState.currentTripId = tripObj.id;
       }
+      
       saveStorageData(); closeTripModal(); renderTripDropdown(); recalcStatsAndRender();
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
     }
@@ -449,7 +459,14 @@
       const t = appState.trips.find(x=>x.id===appState.currentTripId);
       const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
       
-      let payload = { id: "exp_" + Date.now(), tripId: appState.currentTripId, action: "addExpense", employeeName: appState.currentUser + " (" + appState.employeeId + ")", project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
+      // CRITICAL FIX: Use the Employee Name attached to the selected Trip, NOT the logged-in user.
+      let targetEmployeeName = t.employeeName;
+      // If it's a regular employee (not admin), we append the ID. If it's an admin viewing someone else, the trip.employeeName already has it or is just the name.
+      if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) {
+         targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")";
+      }
+
+      let payload = { id: "exp_" + Date.now(), tripId: appState.currentTripId, action: "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
       
       if (appState.activeCategory === "Travel") { payload.origin = document.getElementById("travelOrigin").value.trim(); payload.destination = document.getElementById("travelDestination").value.trim(); payload.transportMode = document.getElementById("travelTransportMode").value; payload.purpose = document.getElementById("travelPurpose").value.trim(); payload.reason = payload.purpose || "Travel"; } 
       else if (appState.activeCategory === "Food") { const f = document.getElementById("foodReasonSelect").value; payload.reason = f === "Custom" ? document.getElementById("foodCustomReason").value.trim() : f; } 
