@@ -45,7 +45,7 @@
         <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
         <div class="flex items-center space-x-3">
           
-          <!-- ADMIN ROLE SWITCHER -->
+          <!-- ADMIN ROLE SWITCHER (Strictly Hidden by Default) -->
           <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
             <button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button>
             <button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button>
@@ -142,7 +142,9 @@
         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
           <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
             <h2 class="font-bold text-base text-slate-900">Logged Items</h2>
-            <div class="flex space-x-2"><select id="categoryFilter" onchange="recalcStatsAndRender()" class="text-xs p-1.5 rounded-md border border-slate-300 bg-slate-50"><option value="All">All Categories</option><option value="Travel">Travel</option><option value="Food">Food</option><option value="Rent">Rent</option><option value="Others">Others</option></select></div>
+            <div class="flex space-x-2">
+              <select id="categoryFilter" onchange="recalcStatsAndRender()" class="text-xs p-1.5 rounded-md border border-slate-300 bg-slate-50"><option value="All">All Categories</option><option value="Travel">Travel</option><option value="Food">Food</option><option value="Rent">Rent</option><option value="Others">Others</option></select>
+            </div>
           </div>
           <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1"></div>
         </div>
@@ -217,7 +219,7 @@
       document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
     }
 
-async function handleAuthSubmit(e) {
+    async function handleAuthSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...'; btn.disabled = true;
@@ -235,45 +237,32 @@ async function handleAuthSubmit(e) {
             toggleAuthMode();
             document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = "";
           } else {
-            // FORCE STATE OVERWRITE
-            appState.currentUser = result.user.name; 
-            appState.employeeId = result.user.empId; 
-            appState.email = result.user.email; 
-            appState.password = result.user.password;
-            
-            // Critical fix: Ensure role is pulled freshly from the DB every time
+            appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password;
             appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
             
-            // RBAC: Show Admin toggle only if user is strictly "Admin"
             if(appState.userRole === "Admin") {
               document.getElementById("adminControlsContainer").style.display = "flex";
-              appState.currentRole = "admin"; // Default Admins to admin view
+              appState.currentRole = "admin";
             } else {
               document.getElementById("adminControlsContainer").style.display = "none";
-              appState.currentRole = "employee"; // Force non-admins to employee view
+              appState.currentRole = "employee";
             }
 
             appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : [];
             appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : [];
-            appState.trips = [...appState.personalTrips]; 
-            appState.expenses = [...appState.personalExpenses];
+            appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
             appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
             
             localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
             saveStorageData(); 
             
-            // If they are an admin, fetch company data immediately upon login
-            if(appState.userRole === "Admin") {
-              showMainApp();
-              await fetchAllCompanyData();
-            } else {
-              showMainApp();
-            }
+            if(appState.userRole === "Admin") { showMainApp(); await fetchAllCompanyData(); } 
+            else { showMainApp(); }
             
             document.getElementById("authForm").reset();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 315."); }
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 316."); }
       finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
@@ -315,25 +304,15 @@ async function handleAuthSubmit(e) {
     function logout(manual = true) { localStorage.removeItem("expense_session_expiry"); document.getElementById("mainApp").classList.add("hidden"); document.getElementById("mainApp").classList.remove("flex"); document.getElementById("authScreen").classList.remove("hidden"); }
 
     function showMainApp() {
-      document.getElementById("authScreen").classList.add("hidden"); 
-      document.getElementById("mainApp").classList.remove("hidden"); 
-      document.getElementById("mainApp").classList.add("flex");
+      document.getElementById("authScreen").classList.add("hidden"); document.getElementById("mainApp").classList.remove("hidden"); document.getElementById("mainApp").classList.add("flex");
       document.getElementById("navEmployeeName").innerText = appState.currentUser;
       
-      if(appState.trips.length === 0 && appState.currentRole !== 'admin') { 
-        appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); 
-        appState.currentTripId = "trip_1"; saveStorageData(); 
-      }
+      if(appState.trips.length === 0 && appState.currentRole !== 'admin') { appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); appState.currentTripId = "trip_1"; saveStorageData(); }
       
-      // STRICT RBAC ENFORCEMENT
-      if(appState.userRole === "Admin") { 
-        document.getElementById("adminControlsContainer").style.display = "flex"; 
-      } else {
-        document.getElementById("adminControlsContainer").style.display = "none";
-      }
+      if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; } 
+      else { document.getElementById("adminControlsContainer").style.display = "none"; }
       
-      renderTripDropdown(); 
-      recalcStatsAndRender();
+      renderTripDropdown(); recalcStatsAndRender();
     }
 
     function openProfileModal() { document.getElementById("modalProfileName").value = appState.currentUser; document.getElementById("modalProfileId").value = appState.employeeId; document.getElementById("modalProfileEmail").value = appState.email; document.getElementById("modalProfilePassword").value = appState.password; document.getElementById("profileModal").classList.remove("hidden"); }
@@ -360,8 +339,25 @@ async function handleAuthSubmit(e) {
       localStorage.setItem("expense_trips", JSON.stringify(appState.personalTrips)); localStorage.setItem("expense_records", JSON.stringify(appState.personalExpenses));
       if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
     }
-// --- TRIPS ---
-function renderTripDropdown() {
+
+    // --- DATA FILTER HELPER (FIXES THE MIXED EXPENSES BUG) ---
+    function getTripExpenses() {
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      if (!trip) return [];
+      const tripEmp = (trip.employeeName || "").trim().toLowerCase();
+      const tripProj = (trip.projectName || "").trim().toLowerCase();
+      
+      return appState.expenses.filter(e => {
+        const expEmp = (e.employeeName || "").trim().toLowerCase();
+        const expProj = (e.project || "").trim().toLowerCase();
+        if (expProj !== tripProj) return false; // Project must match
+        if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true; // Name must match
+        return false;
+      });
+    }
+
+    // --- TRIPS ---
+    function renderTripDropdown() {
       const sel = document.getElementById("tripSelect"); sel.innerHTML = "";
       if(appState.trips.length === 0) { sel.innerHTML = `<option value="">-- No Trips --</option>`; document.getElementById("tripDurationDisplay").innerText = "--"; document.getElementById("statAdvanceInput").value = 0; return; }
       
@@ -374,36 +370,32 @@ function renderTripDropdown() {
 
       const trip = appState.trips.find(t=>t.id===appState.currentTripId);
       if(trip) { 
-        // Format ugly ISO timestamps into clean human-readable dates
         const formatReadable = (ds) => {
-          try { return new Date(ds).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+          try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); } 
           catch(e) { return String(ds).split('T')[0]; }
         };
-
         document.getElementById("tripDurationDisplay").innerText = `${formatReadable(trip.startDate)} to ${formatReadable(trip.endDate)}`; 
         document.getElementById("statAdvanceInput").value = trip.advance || 0; 
       }
     }
-
+    
+    function updateTripAdvance(val) { const trip = appState.trips.find(t => t.id === appState.currentTripId); if (trip) { trip.advance = parseFloat(val) || 0; saveStorageData(); recalcStatsAndRender(); } }
+    function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); recalcStatsAndRender(); }
+    
     function openTripModal(edit) {
       if(edit && appState.currentTripId) { 
         const t = appState.trips.find(x=>x.id===appState.currentTripId); 
         document.getElementById("modalProjectName").value = t.projectName; 
-
-        // Fix raw timestamps so the calendar input can actually read them
         const formatInput = (ds) => {
-          try { const d = new Date(ds); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); } 
+          try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); } 
           catch(e) { return String(ds).split('T')[0]; }
         };
-
         document.getElementById("modalStartDate").value = formatInput(t.startDate); 
         document.getElementById("modalEndDate").value = formatInput(t.endDate); 
         document.getElementById("modalAdvance").value = t.advance || 0; 
         document.getElementById("modalTripTitle").innerText = "Edit Trip Details"; 
-      } 
-      else { 
-        document.getElementById("modalProjectName").value = ""; 
-        document.getElementById("modalAdvance").value = ""; 
+      } else { 
+        document.getElementById("modalProjectName").value = ""; document.getElementById("modalAdvance").value = ""; 
         document.getElementById("modalStartDate").value = new Date().toISOString().split("T")[0]; 
         document.getElementById("modalEndDate").value = new Date().toISOString().split("T")[0]; 
         document.getElementById("modalTripTitle").innerText = "Create New Trip"; 
@@ -440,7 +432,7 @@ function renderTripDropdown() {
       const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
       const payload = { action: "updateStatus", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount, status: newStatus };
       exp.status = newStatus; saveStorageData(); recalcStatsAndRender();
-      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }).catch(e => console.error("Failed to update status"));
     }
 
     function setExpenseType(t) { appState.activeCategory = t; ["Travel","Food","Rent","Others"].forEach(x => { document.getElementById(`fields${x}`).classList.toggle("hidden", x!==t); document.getElementById(`tab-${x}`).className = x===t ? "py-2 rounded-md transition shadow-sm bg-white text-red-600 font-bold" : "py-2 rounded-md transition text-slate-600 hover:text-slate-900"; }); }
@@ -479,42 +471,19 @@ function renderTripDropdown() {
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
     }
 
-function recalcStatsAndRender() {
+    function recalcStatsAndRender() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      const tripExpenses = getTripExpenses();
       
-      // CRITICAL FIX: Filter strictly by BOTH Project Name AND Employee Name
-      let tripExpenses = [];
-      if (trip) {
-        tripExpenses = appState.expenses.filter(e => 
-          e.project === trip.projectName && 
-          (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " ("))
-        );
-      }
-
       const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
-      const advance = trip ? (trip.advance || 0) : 0; 
-      const net = advance - grandTotal;
+      const advance = trip ? (trip.advance || 0) : 0; const net = advance - grandTotal;
 
-      document.getElementById("statTotalItems").innerText = tripExpenses.length; 
-      document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
+      document.getElementById("statTotalItems").innerText = tripExpenses.length; document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
       
-      const netEl = document.getElementById("statNetBalance"); 
-      const netBadge = document.getElementById("netBalanceBadge"); 
-      const netIconBg = document.getElementById("netBalanceIconBg");
-      
-      if (net > 0) { 
-        netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`; 
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company"; 
-        netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"; 
-      } else if (net < 0) { 
-        netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`; 
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You"; 
-        netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"; 
-      } else { 
-        netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`; 
-        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled"; 
-        netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"; 
-      }
+      const netEl = document.getElementById("statNetBalance"); const netBadge = document.getElementById("netBalanceBadge"); const netIconBg = document.getElementById("netBalanceIconBg");
+      if (net > 0) { netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company"; netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"; } 
+      else if (net < 0) { netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You"; netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"; } 
+      else { netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled"; netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"; }
 
       renderExpenseTable(tripExpenses);
     }
@@ -527,7 +496,7 @@ function recalcStatsAndRender() {
       
       items.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(item => {
         const d = document.createElement("div"); d.className = "p-3 border border-slate-200 bg-slate-50 rounded-lg flex justify-between items-center";
-        let attIcon = ""; if (item.billImage || item.payImage || item.billUrl || item.payUrl) attIcon = `<i class="fa-solid fa-paperclip text-blue-500 ml-2" title="Has Attachments"></i>`;
+        let attIcon = ""; if (item.billImage || item.payImage || item.billUrl || item.payUrl) attIcon = `<a href="${item.billUrl || item.payUrl}" target="_blank"><i class="fa-solid fa-paperclip text-blue-500 ml-2" title="Has Attachments"></i></a>`;
         
         let statusColor = "bg-amber-100 text-amber-700"; let statusText = item.status || "Pending";
         if (statusText === "Approved") statusColor = "bg-emerald-100 text-emerald-700";
@@ -561,10 +530,7 @@ function recalcStatsAndRender() {
     // --- EXPORTS ---
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
-      let tripExpenses = [];
-      if (trip) {
-        tripExpenses = appState.expenses.filter(e => e.project === trip.projectName && (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " (")));
-      }
+      const tripExpenses = getTripExpenses();
       
       const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage);
       if (itemsWithImages.length === 0) { alert("No receipt bills or payment screenshots have been uploaded for this trip yet!"); return; }
@@ -591,10 +557,7 @@ function recalcStatsAndRender() {
 
     function exportToStyledExcel() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
-      let tripExpenses = [];
-      if (trip) {
-        tripExpenses = appState.expenses.filter(e => e.project === trip.projectName && (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " (")));
-      }
+      const tripExpenses = getTripExpenses();
       const projName = trip ? trip.projectName : "Trip Expenses";
 
       const travelItems = tripExpenses.filter(e => e.category === "Travel"), foodItems = tripExpenses.filter(e => e.category === "Food"), miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
