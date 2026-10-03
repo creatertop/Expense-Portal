@@ -46,7 +46,7 @@
         <div class="flex items-center space-x-3">
           
           <!-- ADMIN ROLE SWITCHER -->
-          <div id="adminControlsContainer" class="hidden items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs sm:flex">
+          <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
             <button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button>
             <button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button>
           </div>
@@ -246,12 +246,10 @@ async function handleAuthSubmit(e) {
             
             // RBAC: Show Admin toggle only if user is strictly "Admin"
             if(appState.userRole === "Admin") {
-              document.getElementById("adminControlsContainer").classList.remove("hidden"); 
-              document.getElementById("adminControlsContainer").classList.add("flex");
+              document.getElementById("adminControlsContainer").style.display = "flex";
               appState.currentRole = "admin"; // Default Admins to admin view
             } else {
-              document.getElementById("adminControlsContainer").classList.add("hidden"); 
-              document.getElementById("adminControlsContainer").classList.remove("flex");
+              document.getElementById("adminControlsContainer").style.display = "none";
               appState.currentRole = "employee"; // Force non-admins to employee view
             }
 
@@ -317,11 +315,25 @@ async function handleAuthSubmit(e) {
     function logout(manual = true) { localStorage.removeItem("expense_session_expiry"); document.getElementById("mainApp").classList.add("hidden"); document.getElementById("mainApp").classList.remove("flex"); document.getElementById("authScreen").classList.remove("hidden"); }
 
     function showMainApp() {
-      document.getElementById("authScreen").classList.add("hidden"); document.getElementById("mainApp").classList.remove("hidden"); document.getElementById("mainApp").classList.add("flex");
+      document.getElementById("authScreen").classList.add("hidden"); 
+      document.getElementById("mainApp").classList.remove("hidden"); 
+      document.getElementById("mainApp").classList.add("flex");
       document.getElementById("navEmployeeName").innerText = appState.currentUser;
-      if(appState.trips.length === 0 && appState.currentRole !== 'admin') { appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); appState.currentTripId = "trip_1"; saveStorageData(); }
-      if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").classList.remove("hidden"); document.getElementById("adminControlsContainer").classList.add("flex"); }
-      renderTripDropdown(); recalcStatsAndRender();
+      
+      if(appState.trips.length === 0 && appState.currentRole !== 'admin') { 
+        appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); 
+        appState.currentTripId = "trip_1"; saveStorageData(); 
+      }
+      
+      // STRICT RBAC ENFORCEMENT
+      if(appState.userRole === "Admin") { 
+        document.getElementById("adminControlsContainer").style.display = "flex"; 
+      } else {
+        document.getElementById("adminControlsContainer").style.display = "none";
+      }
+      
+      renderTripDropdown(); 
+      recalcStatsAndRender();
     }
 
     function openProfileModal() { document.getElementById("modalProfileName").value = appState.currentUser; document.getElementById("modalProfileId").value = appState.employeeId; document.getElementById("modalProfileEmail").value = appState.email; document.getElementById("modalProfilePassword").value = appState.password; document.getElementById("profileModal").classList.remove("hidden"); }
