@@ -74,7 +74,7 @@
         <div class="flex items-center space-x-2">
           <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
           <button onclick="exportToStyledExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel</button>
-          <button onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)</button>
+          <button id="btnZipExport" onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)</button>
         </div>
       </div>
 
@@ -340,7 +340,7 @@
       if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
     }
 
-    // --- DATA FILTER HELPER (FIXES THE MIXED EXPENSES BUG) ---
+    // --- DATA FILTER HELPER (FIXES MIXED EXPENSES BUG) ---
     function getTripExpenses() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId);
       if (!trip) return [];
@@ -410,19 +410,15 @@
       let tripObj = null, oldName = null; const existing = appState.trips.find(t => t.id === appState.currentTripId);
       
       let targetEmployee = appState.currentUser;
-      if (appState.currentRole === "admin" && existing) {
-        targetEmployee = existing.employeeName;
-      }
+      if (appState.currentRole === "admin" && existing) { targetEmployee = existing.employeeName; }
 
       if (existing && document.getElementById("modalTripTitle").innerText.includes("Edit")) {
         oldName = existing.projectName; existing.projectName = proj; existing.startDate = sd; existing.endDate = ed; existing.advance = adv; tripObj = existing;
         if(oldName !== proj) appState.expenses.forEach(exp => { if(exp.project === oldName) exp.project = proj; });
       } else {
         tripObj = { id: "trip_"+Date.now(), employeeName: targetEmployee, projectName: proj, startDate: sd, endDate: ed, advance: adv }; 
-        appState.trips.push(tripObj); 
-        appState.currentTripId = tripObj.id;
+        appState.trips.push(tripObj); appState.currentTripId = tripObj.id;
       }
-      
       saveStorageData(); closeTripModal(); renderTripDropdown(); recalcStatsAndRender();
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
     }
@@ -459,9 +455,7 @@
       const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
       
       let targetEmployeeName = t.employeeName;
-      if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) {
-         targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")";
-      }
+      if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) { targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")"; }
 
       let payload = { id: "exp_" + Date.now(), tripId: appState.currentTripId, action: "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
       
@@ -512,16 +506,10 @@
         const d = document.createElement("div"); d.className = "p-3 border border-slate-200 bg-slate-50 rounded-lg flex justify-between items-center";
         
         let attIcon = ""; 
-        if (item.billUrl && item.billUrl !== "No Bill") {
-          attIcon += `<a href="${item.billUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View Bill"><i class="fa-solid fa-file-invoice"></i></a>`;
-        } else if (item.billImage) {
-           attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Bill"></i>`;
-        }
-        if (item.payUrl && item.payUrl !== "No Payment") {
-          attIcon += `<a href="${item.payUrl}" target="_blank" class="text-emerald-500 hover:text-emerald-700 ml-2" title="View Payment"><i class="fa-solid fa-money-bill-wave"></i></a>`;
-        } else if (item.payImage) {
-           attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Payment"></i>`;
-        }
+        if (item.billUrl && item.billUrl !== "No Bill") { attIcon += `<a href="${item.billUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View Bill"><i class="fa-solid fa-file-invoice"></i></a>`; } 
+        else if (item.billImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Bill"></i>`; }
+        if (item.payUrl && item.payUrl !== "No Payment") { attIcon += `<a href="${item.payUrl}" target="_blank" class="text-emerald-500 hover:text-emerald-700 ml-2" title="View Payment"><i class="fa-solid fa-money-bill-wave"></i></a>`; } 
+        else if (item.payImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Payment"></i>`; }
 
         let statusColor = "bg-amber-100 text-amber-700"; let statusText = item.status || "Pending";
         if (statusText === "Approved") statusColor = "bg-emerald-100 text-emerald-700";
@@ -552,33 +540,69 @@
       });
     }
 
-    // --- EXPORTS ---
+    // --- ZIP EXPORTS WITH PROXY FETCHER ---
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       const tripExpenses = getTripExpenses();
       
-      const itemsWithImages = tripExpenses.filter(e => (e.billUrl && e.billUrl !== "No Bill") || (e.payUrl && e.payUrl !== "No Payment") || e.billImage || e.payImage);
+      const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage || (e.billUrl && e.billUrl !== "No Bill") || (e.payUrl && e.payUrl !== "No Payment"));
       if (itemsWithImages.length === 0) { alert("No receipts or payment links have been logged for this trip yet!"); return; }
+
+      const btn = document.getElementById("btnZipExport");
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Compiling...';
+      btn.disabled = true;
 
       const zip = new JSZip(); 
       const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const rootFolder = zip.folder(`${projClean}_Receipts`);
       
-      let linkDocumentText = `RECEIPT LINKS FOR TRIP: ${projClean.toUpperCase()}\n`;
-      linkDocumentText += `Generated on: ${new Date().toLocaleDateString()}\n`;
-      linkDocumentText += `---------------------------------------------------\n\n`;
+      const folderMap = {}; 
+      ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
 
-      itemsWithImages.forEach(item => {
-        const cat = item.category || "Others"; const rawReason = item.reason || "Expense";
-        linkDocumentText += `[${item.date}] ${cat} - ${rawReason} (Amount: Rs. ${item.amount})\n`;
-        if (item.billUrl && item.billUrl !== "No Bill") linkDocumentText += `   -> Bill Link: ${item.billUrl}\n`;
-        if (item.payUrl && item.payUrl !== "No Payment") linkDocumentText += `   -> Payment Link: ${item.payUrl}\n`;
-        linkDocumentText += `\n`;
-      });
+      const nameCounters = {};
 
-      zip.file(`${projClean}_Receipt_Links.txt`, linkDocumentText);
+      for (const item of itemsWithImages) {
+        const cat = item.category || "Others";
+        const rawReason = item.reason || "Expense";
+        const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
+        const baseKey = `${item.date}_${cleanReason}`;
+        
+        if (!nameCounters[baseKey]) nameCounters[baseKey] = 0; 
+        nameCounters[baseKey]++;
+        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
+        const finalFileName = `${baseKey}${suffix}.jpg`;
+
+        async function getB64(localB64, driveUrl) {
+          if (localB64 && localB64.startsWith("data:image")) return localB64.split(",")[1];
+          if (driveUrl && driveUrl.includes("drive.google.com")) {
+            const match = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) {
+              try {
+                // Securely fetches the raw image from Google Drive by bypassing CORS
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent("https://drive.google.com/uc?export=download&id=" + match[1])}`;
+                const res = await fetch(proxyUrl);
+                const blob = await res.blob();
+                return await new Promise(r => { const reader = new FileReader(); reader.onloadend = () => r(reader.result.split(',')[1]); reader.readAsDataURL(blob); });
+              } catch(e) { console.error("Could not fetch image", e); }
+            }
+          }
+          return null;
+        }
+
+        const billB64 = await getB64(item.billImage, item.billUrl);
+        if (billB64) folderMap[cat].bills.file(finalFileName, billB64, { base64: true });
+
+        const payB64 = await getB64(item.payImage, item.payUrl);
+        if (payB64) folderMap[cat].payments.file(finalFileName, payB64, { base64: true });
+      }
+
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
     }
 
     function exportToStyledExcel() {
