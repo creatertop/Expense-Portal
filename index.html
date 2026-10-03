@@ -190,7 +190,7 @@
     // -------------------------------------------------------------
     // PASTE YOUR LATEST GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbweeQZKcjsDOeAMOwm6ezE6Md86xltdeii26F2_vhOfLVYa5IRSdrgtuF07NScHyNIu0w/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymG-PT4BMiEtCfpZXs-JpOEq-64vHgJ1a28fTV6vSBCJDTjr6SXCWPkNvtqWwgU7vU/exec";
 
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
@@ -541,6 +541,7 @@
     }
 
     // --- ZIP EXPORTS WITH PROXY FETCHER ---
+    // --- EXPORTS ---
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       const tripExpenses = getTripExpenses();
@@ -550,19 +551,44 @@
 
       const btn = document.getElementById("btnZipExport");
       const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Compiling...';
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Fetching Images...';
       btn.disabled = true;
 
+      // 1. Gather all Google Drive URLs that need to be fetched
+      const driveUrlsToFetch = [];
+      itemsWithImages.forEach(item => {
+        if (item.billUrl && item.billUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.billUrl);
+        if (item.payUrl && item.payUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.payUrl);
+      });
+
+      // 2. Ask the GAS Backend to securely fetch the real images from Drive
+      let cloudImages = {};
+      if (driveUrlsToFetch.length > 0) {
+        try {
+          const r = await fetch(SCRIPT_URL, { 
+            method: "POST", 
+            body: JSON.stringify({ action: "fetchImagesForZip", urls: driveUrlsToFetch }) 
+          });
+          const res = await r.json();
+          if (res.status === "success" && res.images) cloudImages = res.images;
+        } catch(e) { console.error("Cloud fetch failed", e); }
+      }
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Zipping...';
+
+      // 3. Build the ZIP File
       const zip = new JSZip(); 
       const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
       const rootFolder = zip.folder(`${projClean}_Receipts`);
       
       const folderMap = {}; 
-      ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
+      ["Travel", "Food", "Rent", "Others"].forEach(cat => { 
+        folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; 
+      });
 
       const nameCounters = {};
 
-      for (const item of itemsWithImages) {
+      itemsWithImages.forEach(item => {
         const cat = item.category || "Others";
         const rawReason = item.reason || "Expense";
         const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
@@ -573,30 +599,21 @@
         const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
         const finalFileName = `${baseKey}${suffix}.jpg`;
 
-        async function getB64(localB64, driveUrl) {
+        // Look up the securely fetched Base64 image
+        const resolveB64 = (localB64, driveUrl) => {
           if (localB64 && localB64.startsWith("data:image")) return localB64.split(",")[1];
-          if (driveUrl && driveUrl.includes("drive.google.com")) {
-            const match = driveUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match) {
-              try {
-                // Securely fetches the raw image from Google Drive by bypassing CORS
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent("https://drive.google.com/uc?export=download&id=" + match[1])}`;
-                const res = await fetch(proxyUrl);
-                const blob = await res.blob();
-                return await new Promise(r => { const reader = new FileReader(); reader.onloadend = () => r(reader.result.split(',')[1]); reader.readAsDataURL(blob); });
-              } catch(e) { console.error("Could not fetch image", e); }
-            }
-          }
+          if (driveUrl && cloudImages[driveUrl]) return cloudImages[driveUrl];
           return null;
-        }
+        };
 
-        const billB64 = await getB64(item.billImage, item.billUrl);
+        const billB64 = resolveB64(item.billImage, item.billUrl);
         if (billB64) folderMap[cat].bills.file(finalFileName, billB64, { base64: true });
 
-        const payB64 = await getB64(item.payImage, item.payUrl);
+        const payB64 = resolveB64(item.payImage, item.payUrl);
         if (payB64) folderMap[cat].payments.file(finalFileName, payB64, { base64: true });
-      }
+      });
 
+      // 4. Download
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
