@@ -479,18 +479,42 @@ function renderTripDropdown() {
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
     }
 
-    function recalcStatsAndRender() {
+function recalcStatsAndRender() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
-      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
-      const advance = trip ? (trip.advance || 0) : 0; const net = advance - grandTotal;
-
-      document.getElementById("statTotalItems").innerText = tripExpenses.length; document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
       
-      const netEl = document.getElementById("statNetBalance"); const netBadge = document.getElementById("netBalanceBadge"); const netIconBg = document.getElementById("netBalanceIconBg");
-      if (net > 0) { netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company"; netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"; } 
-      else if (net < 0) { netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You"; netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"; } 
-      else { netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled"; netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"; }
+      // CRITICAL FIX: Filter strictly by BOTH Project Name AND Employee Name
+      let tripExpenses = [];
+      if (trip) {
+        tripExpenses = appState.expenses.filter(e => 
+          e.project === trip.projectName && 
+          (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " ("))
+        );
+      }
+
+      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
+      const advance = trip ? (trip.advance || 0) : 0; 
+      const net = advance - grandTotal;
+
+      document.getElementById("statTotalItems").innerText = tripExpenses.length; 
+      document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
+      
+      const netEl = document.getElementById("statNetBalance"); 
+      const netBadge = document.getElementById("netBalanceBadge"); 
+      const netIconBg = document.getElementById("netBalanceIconBg");
+      
+      if (net > 0) { 
+        netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`; 
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company"; 
+        netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"; 
+      } else if (net < 0) { 
+        netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`; 
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You"; 
+        netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"; 
+      } else { 
+        netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`; 
+        netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled"; 
+        netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"; 
+      }
 
       renderExpenseTable(tripExpenses);
     }
@@ -536,7 +560,12 @@ function renderTripDropdown() {
 
     // --- EXPORTS ---
     async function downloadOrganizedReceiptsZip() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
+      let tripExpenses = [];
+      if (trip) {
+        tripExpenses = appState.expenses.filter(e => e.project === trip.projectName && (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " (")));
+      }
+      
       const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage);
       if (itemsWithImages.length === 0) { alert("No receipt bills or payment screenshots have been uploaded for this trip yet!"); return; }
 
@@ -561,7 +590,11 @@ function renderTripDropdown() {
     }
 
     function exportToStyledExcel() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = appState.expenses.filter(e => e.project === (trip ? trip.projectName : ""));
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
+      let tripExpenses = [];
+      if (trip) {
+        tripExpenses = appState.expenses.filter(e => e.project === trip.projectName && (e.employeeName === trip.employeeName || e.employeeName.startsWith(trip.employeeName + " (")));
+      }
       const projName = trip ? trip.projectName : "Trip Expenses";
 
       const travelItems = tripExpenses.filter(e => e.category === "Travel"), foodItems = tripExpenses.filter(e => e.category === "Food"), miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
@@ -575,10 +608,10 @@ function renderTripDropdown() {
 
       const wb = XLSX.utils.book_new(), ws = {}, merges = []; function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
 
-      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 7 } });
+      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 8 } });
 
       let r = 3;
-      setCell(r, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 7 } }); r++;
+      setCell(r, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 8 } }); r++;
       const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks", "Status"]; travelHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
       if (travelItems.length === 0) { [0,1,2,3,4,5,7,8].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 6, 0, styleAmountGreen); r++; } else { travelItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.purpose||"-",styleDataCell); setCell(r,2,item.origin||"-",styleDataCell); setCell(r,3,item.destination||"-",styleDataCell); setCell(r,4,item.transportMode||"-",styleDataCell); setCell(r,5,item.amountExpr||item.amount,styleDataCell); setCell(r,6,item.amount,styleAmountGreen); setCell(r,7,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,8,item.status||"Pending",styleDataCell); r++; }); }
       setCell(r, 5, "Total", styleTotalRed); setCell(r, 6, travelSum, styleTotalRed); r += 2;
