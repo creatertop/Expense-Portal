@@ -262,7 +262,7 @@
             document.getElementById("authForm").reset();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 316."); }
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 315."); }
       finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
@@ -350,8 +350,8 @@
       return appState.expenses.filter(e => {
         const expEmp = (e.employeeName || "").trim().toLowerCase();
         const expProj = (e.project || "").trim().toLowerCase();
-        if (expProj !== tripProj) return false; // Project must match
-        if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true; // Name must match
+        if (expProj !== tripProj) return false;
+        if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true;
         return false;
       });
     }
@@ -409,7 +409,6 @@
       const proj = document.getElementById("modalProjectName").value.trim(), sd = document.getElementById("modalStartDate").value, ed = document.getElementById("modalEndDate").value, adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
       let tripObj = null, oldName = null; const existing = appState.trips.find(t => t.id === appState.currentTripId);
       
-      // CRITICAL FIX: If Admin is editing, keep the original employee's name. If creating, use Admin's name.
       let targetEmployee = appState.currentUser;
       if (appState.currentRole === "admin" && existing) {
         targetEmployee = existing.employeeName;
@@ -459,9 +458,7 @@
       const t = appState.trips.find(x=>x.id===appState.currentTripId);
       const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
       
-      // CRITICAL FIX: Use the Employee Name attached to the selected Trip, NOT the logged-in user.
       let targetEmployeeName = t.employeeName;
-      // If it's a regular employee (not admin), we append the ID. If it's an admin viewing someone else, the trip.employeeName already has it or is just the name.
       if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) {
          targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")";
       }
@@ -513,8 +510,19 @@
       
       items.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(item => {
         const d = document.createElement("div"); d.className = "p-3 border border-slate-200 bg-slate-50 rounded-lg flex justify-between items-center";
-        let attIcon = ""; if (item.billImage || item.payImage || item.billUrl || item.payUrl) attIcon = `<a href="${item.billUrl || item.payUrl}" target="_blank"><i class="fa-solid fa-paperclip text-blue-500 ml-2" title="Has Attachments"></i></a>`;
         
+        let attIcon = ""; 
+        if (item.billUrl && item.billUrl !== "No Bill") {
+          attIcon += `<a href="${item.billUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View Bill"><i class="fa-solid fa-file-invoice"></i></a>`;
+        } else if (item.billImage) {
+           attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Bill"></i>`;
+        }
+        if (item.payUrl && item.payUrl !== "No Payment") {
+          attIcon += `<a href="${item.payUrl}" target="_blank" class="text-emerald-500 hover:text-emerald-700 ml-2" title="View Payment"><i class="fa-solid fa-money-bill-wave"></i></a>`;
+        } else if (item.payImage) {
+           attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Payment"></i>`;
+        }
+
         let statusColor = "bg-amber-100 text-amber-700"; let statusText = item.status || "Pending";
         if (statusText === "Approved") statusColor = "bg-emerald-100 text-emerald-700";
         if (statusText === "Rejected") statusColor = "bg-red-100 text-red-700";
@@ -532,8 +540,8 @@
 
         d.innerHTML = `
           <div>
-            <div class="font-bold text-sm">${item.category} - ${item.reason} ${attIcon} ${statusBadge}</div>
-            <div class="text-[11px] text-slate-500">${item.date} | ${appState.currentRole === "admin" ? item.employeeName + " | " : ""}${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>
+            <div class="font-bold text-sm flex items-center">${item.category} - ${item.reason} ${attIcon} ${statusBadge}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">${item.date} | ${appState.currentRole === "admin" ? item.employeeName + " | " : ""}${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>
             ${adminActions}
           </div>
           <div class="text-right flex flex-col items-end">
@@ -549,24 +557,25 @@
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       const tripExpenses = getTripExpenses();
       
-      const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage);
-      if (itemsWithImages.length === 0) { alert("No receipt bills or payment screenshots have been uploaded for this trip yet!"); return; }
+      const itemsWithImages = tripExpenses.filter(e => (e.billUrl && e.billUrl !== "No Bill") || (e.payUrl && e.payUrl !== "No Payment") || e.billImage || e.payImage);
+      if (itemsWithImages.length === 0) { alert("No receipts or payment links have been logged for this trip yet!"); return; }
 
-      const zip = new JSZip(); const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const rootFolder = zip.folder(`${projClean}_Receipts`);
-      const folderMap = {}; ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
+      const zip = new JSZip(); 
+      const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
+      
+      let linkDocumentText = `RECEIPT LINKS FOR TRIP: ${projClean.toUpperCase()}\n`;
+      linkDocumentText += `Generated on: ${new Date().toLocaleDateString()}\n`;
+      linkDocumentText += `---------------------------------------------------\n\n`;
 
-      const nameCounters = {};
       itemsWithImages.forEach(item => {
-        const cat = item.category || "Others", rawReason = item.reason || "Expense", cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
-        const baseKey = `${item.date}_${cleanReason}`;
-        if (!nameCounters[baseKey]) nameCounters[baseKey] = 0; nameCounters[baseKey]++;
-        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "", finalFileName = `${baseKey}${suffix}.jpg`;
-
-        if (item.billImage && item.billImage.startsWith("data:image")) folderMap[cat].bills.file(finalFileName, item.billImage.split(",")[1], { base64: true });
-        if (item.payImage && item.payImage.startsWith("data:image")) folderMap[cat].payments.file(finalFileName, item.payImage.split(",")[1], { base64: true });
+        const cat = item.category || "Others"; const rawReason = item.reason || "Expense";
+        linkDocumentText += `[${item.date}] ${cat} - ${rawReason} (Amount: Rs. ${item.amount})\n`;
+        if (item.billUrl && item.billUrl !== "No Bill") linkDocumentText += `   -> Bill Link: ${item.billUrl}\n`;
+        if (item.payUrl && item.payUrl !== "No Payment") linkDocumentText += `   -> Payment Link: ${item.payUrl}\n`;
+        linkDocumentText += `\n`;
       });
 
+      zip.file(`${projClean}_Receipt_Links.txt`, linkDocumentText);
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
