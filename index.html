@@ -66,7 +66,6 @@
               <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 block p-2 font-medium"></select>
               <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip"><i class="fa-solid fa-pen-to-square"></i></button>
               <button onclick="deleteCurrentTrip()" class="p-2 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg text-sm transition" title="Delete Trip"><i class="fa-solid fa-trash-can"></i></button>
-              <!-- REFRESH BUTTON (Solves Request #4) -->
               <button id="btnRefreshSync" onclick="refreshCloudData()" class="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-600 rounded-lg text-sm transition" title="Sync / Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
           </div>
@@ -114,7 +113,7 @@
               <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
               <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
               <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-              <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Bus</option><option>Flight</option></select>
+              <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
             </div>
             <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
               <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
@@ -129,14 +128,12 @@
               <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
             </div>
             
-            <!-- ATTACHMENTS SECTION (Solves Request #3) -->
             <div class="border-t border-slate-200 pt-4 mt-4">
               <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Required *)</label>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 hover:bg-red-50 transition relative">
                   <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-camera text-red-500 mr-1.5"></i>Paper Bill (Camera)</label>
                   <p class="text-[9px] text-slate-500 mb-2 leading-tight">Click photo directly from your phone</p>
-                  <!-- 'capture="environment"' immediately triggers the phone camera -->
                   <input type="file" id="fileBill" accept="image/*" capture="environment" onchange="previewImageFile(this, 'fileBill')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200" />
                 </div>
                 <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 hover:bg-blue-50 transition relative">
@@ -167,8 +164,6 @@
   <!-- ========================================== -->
   <!-- MODALS -->
   <!-- ========================================== -->
-  
-  <!-- CONFIRMATION MODAL (Solves Request #1) -->
   <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
     <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
       <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div>
@@ -181,7 +176,6 @@
     </div>
   </div>
 
-  <!-- SUCCESS TOAST MODAL (Solves Request #1) -->
   <div id="successModal" class="fixed top-8 left-0 right-0 pointer-events-none flex items-start justify-center p-6 z-[200] transition-opacity hidden">
     <div class="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3">
       <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-check"></i></div>
@@ -348,7 +342,6 @@
       } catch (e) { alert("Failed to fetch admin data"); renderTripDropdown(); }
     }
 
-    // --- REFRESH CLOUD DATA (Solves Request #4) ---
     async function refreshCloudData() {
       const btn = document.getElementById("btnRefreshSync");
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -449,13 +442,11 @@
       }
     }
     
-    // --- ADVANCE BACKGROUND SYNC (Solves Request #2 & #4) ---
     function updateTripAdvance(val) { 
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       if (trip) { 
         trip.advance = parseFloat(val) || 0; 
         saveStorageData(); recalcStatsAndRender(); 
-        // Immediately sync to cloud in background
         fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: trip, oldProjectName: null }) });
         showSuccessModal("Advance updated globally!");
       } 
@@ -504,11 +495,8 @@
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
     }
 
-    // --- DELETE MODALS (Solves Request #1) ---
     function deleteCurrentTrip() {
-      if (!appState.currentTripId) return; 
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      
+      if (!appState.currentTripId) return; const trip = appState.trips.find(t => t.id === appState.currentTripId);
       showConfirmModal("Delete Entire Trip?", `Permanently delete "${trip.projectName}" and ALL its expenses?`, () => {
         const payload = { action: "deleteTrip", employeeName: trip.employeeName, project: trip.projectName };
         appState.trips = appState.trips.filter(t => t.id !== appState.currentTripId); appState.expenses = appState.expenses.filter(e => e.project !== trip.projectName); appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
@@ -520,7 +508,6 @@
 
     function deleteExpense(expId) {
       const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
-      
       showConfirmModal("Delete Expense?", "Permanently delete this logged item? This cannot be undone.", () => {
         const payload = { action: "deleteExpense", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount };
         appState.expenses = appState.expenses.filter(e => e.id !== expId); saveStorageData(); recalcStatsAndRender();
@@ -529,7 +516,6 @@
       });
     }
 
-    // --- EXPENSES & STATUS APPROVAL ---
     async function updateExpenseStatus(expId, newStatus) {
       const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
       const payload = { action: "updateStatus", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount, status: newStatus };
@@ -545,7 +531,6 @@
     async function previewImageFile(input, type) { if(input.files && input.files[0]) { const b64 = await compressImageToJpeg(input.files[0]); if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; } }
     function evaluateMathAmount(expr) { if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, ""); try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } catch (e) { return parseFloat(clean) || 0; } }
 
-    // --- OPTIMISTIC UI SAVE (Solves Request #5) ---
     async function handleFormSubmit(e) {
       e.preventDefault(); 
       if(appState.trips.length === 0) { showSuccessModal("Please create a Trip first!"); return; }
@@ -563,20 +548,11 @@
       else if (appState.activeCategory === "Rent") { payload.roomLocation = document.getElementById("rentLocation").value.trim(); payload.rentType = document.getElementById("rentDurationType").value; payload.roomType = document.getElementById("rentRoomType").value; payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")"; } 
       else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
       
-      // OPTIMISTIC UPDATE: Visually save instantly and clear form. No waiting!
-      appState.expenses.push(payload); 
-      saveStorageData(); 
-      recalcStatsAndRender(); 
-      document.getElementById("expenseForm").reset(); 
-      currentCompressedBill=null; 
-      currentCompressedPay=null;
-      
+      appState.expenses.push(payload); saveStorageData(); recalcStatsAndRender(); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;
       showSuccessModal("Saved locally! Uploading to cloud in background...");
 
-      // Send to backend silently without making the user wait
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
-        .then(r => r.json())
-        .then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); })
+        .then(r => r.json()).then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); })
         .catch(err => console.error("Background sync failed", err));
     }
 
@@ -641,7 +617,6 @@
       });
     }
 
-    // --- ZIP EXPORTS WITH PROXY FETCHER ---
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       const tripExpenses = getTripExpenses();
@@ -712,52 +687,112 @@
       btn.disabled = false;
     }
 
+    // --- SIDE BY SIDE EXCEL EXPORT (FIXES OVERLAP BUG) ---
     function exportToStyledExcel() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
       const tripExpenses = getTripExpenses();
       const projName = trip ? trip.projectName : "Trip Expenses";
 
-      const travelItems = tripExpenses.filter(e => e.category === "Travel"), foodItems = tripExpenses.filter(e => e.category === "Food"), miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
-      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0), foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0), miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0), grandTotal = travelSum + foodSum + miscSum, advance = trip ? (trip.advance || 0) : 0;
+      const travelItems = tripExpenses.filter(e => e.category === "Travel");
+      const foodItems = tripExpenses.filter(e => e.category === "Food");
+      const miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
 
-      const fontCalibri = { name: "Calibri", sz: 11 }, borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
+      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0);
+      const foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0);
+      const miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0);
+      const grandTotal = travelSum + foodSum + miscSum;
+      const advance = trip ? (trip.advance || 0) : 0;
+
+      const fontCalibri = { name: "Calibri", sz: 11 };
+      const borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
       const styleTitle = { font: { name: "Calibri", sz: 14, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
       const styleBannerOrange = { fill: { fgColor: { rgb: "F79646" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
       const styleHeaderBlue = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: borderThin };
-      const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }, styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }, styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }, styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
 
-      const wb = XLSX.utils.book_new(), ws = {}, merges = []; function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
+      const wb = XLSX.utils.book_new();
+      const ws = {};
+      const merges = [];
+      function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
 
-      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 8 } });
+      setCell(1, 0, `${projName} Expenses Report`, styleTitle);
+      merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 26 } });
 
-      let r = 3;
-      setCell(r, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 8 } }); r++;
-      const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks", "Status"]; travelHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (travelItems.length === 0) { [0,1,2,3,4,5,7,8].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 6, 0, styleAmountGreen); r++; } else { travelItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.purpose||"-",styleDataCell); setCell(r,2,item.origin||"-",styleDataCell); setCell(r,3,item.destination||"-",styleDataCell); setCell(r,4,item.transportMode||"-",styleDataCell); setCell(r,5,item.amountExpr||item.amount,styleDataCell); setCell(r,6,item.amount,styleAmountGreen); setCell(r,7,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,8,item.status||"Pending",styleDataCell); r++; }); }
-      setCell(r, 5, "Total", styleTotalRed); setCell(r, 6, travelSum, styleTotalRed); r += 2;
+      let maxRow = 3;
 
-      setCell(r, 0, "Food Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 5 } }); r++;
-      const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total", "Status"]; foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (foodItems.length === 0) { [0,1,2,3,5].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; } else { foodItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); setCell(r,5,item.status||"Pending",styleDataCell); r++; }); }
-      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, foodSum, styleTotalRed); r += 2;
+      // 1. TRAVEL SECTION (Cols 0-8)
+      let rT = 3;
+      setCell(rT, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r: rT, c: 0 }, e: { r: rT, c: 8 } }); rT++;
+      const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks", "Status"];
+      travelHeaders.forEach((h, idx) => setCell(rT, idx, h, styleHeaderBlue)); rT++;
+      if (travelItems.length === 0) {
+        [0,1,2,3,4,5,7,8].forEach(c => setCell(rT, c, "-", styleDataCell)); setCell(rT, 6, 0, styleAmountGreen); rT++;
+      } else {
+        travelItems.forEach(item => {
+          setCell(rT, 0, item.date, styleDataCell); setCell(rT, 1, item.purpose||"-", styleDataCell); setCell(rT, 2, item.origin||"-", styleDataCell); setCell(rT, 3, item.destination||"-", styleDataCell); setCell(rT, 4, item.transportMode||"-", styleDataCell); setCell(rT, 5, item.amountExpr||item.amount, styleDataCell); setCell(rT, 6, item.amount, styleAmountGreen); setCell(rT, 7, item.remarks||item.paymentType||"-", styleDataCell); setCell(rT, 8, item.status||"Pending", styleDataCell); rT++;
+        });
+      }
+      setCell(rT, 5, "Total", styleTotalRed); setCell(rT, 6, travelSum, styleTotalRed); rT++;
+      if(rT > maxRow) maxRow = rT;
 
-      setCell(r, 0, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r, c: 0 }, e: { r, c: 5 } }); r++;
-      foodHeaders.forEach((h, idx) => setCell(r, idx, h, styleHeaderBlue)); r++;
-      if (miscItems.length === 0) { [0,1,2,3,5].forEach(c => setCell(r, c, "-", styleDataCell)); setCell(r, 4, 0, styleAmountGreen); r++; } else { miscItems.forEach(item => { setCell(r,0,item.date,styleDataCell); setCell(r,1,item.reason||"-",styleDataCell); setCell(r,2,item.amountExpr||item.amount,styleDataCell); setCell(r,3,item.remarks||item.paymentType||"-",styleDataCell); setCell(r,4,item.amount,styleAmountGreen); setCell(r,5,item.status||"Pending",styleDataCell); r++; }); }
-      setCell(r, 3, "Total", styleTotalRed); setCell(r, 4, miscSum, styleTotalRed);
+      // 2. FOOD SECTION (Cols 10-15)
+      let rF = 3;
+      setCell(rF, 10, "Food Expenses", styleBannerOrange); merges.push({ s: { r: rF, c: 10 }, e: { r: rF, c: 15 } }); rF++;
+      const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total", "Status"];
+      foodHeaders.forEach((h, idx) => setCell(rF, 10 + idx, h, styleHeaderBlue)); rF++;
+      if (foodItems.length === 0) {
+        [0,1,2,3,5].forEach(c => setCell(rF, 10 + c, "-", styleDataCell)); setCell(rF, 14, 0, styleAmountGreen); rF++;
+      } else {
+        foodItems.forEach(item => {
+          setCell(rF, 10, item.date, styleDataCell); setCell(rF, 11, item.reason||"-", styleDataCell); setCell(rF, 12, item.amountExpr||item.amount, styleDataCell); setCell(rF, 13, item.remarks||item.paymentType||"-", styleDataCell); setCell(rF, 14, item.amount, styleAmountGreen); setCell(rF, 15, item.status||"Pending", styleDataCell); rF++;
+        });
+      }
+      setCell(rF, 13, "Total", styleTotalRed); setCell(rF, 14, foodSum, styleTotalRed); rF++;
+      if(rF > maxRow) maxRow = rF;
 
-      let rightR = 14;
-      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Advance", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
-      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, trip ? trip.employeeName : appState.currentUser, styleSummaryGold); setCell(rightR, 8, advance, styleAmountGreen); rightR += 2;
+      // 3. MISC/RENT SECTION (Cols 17-22)
+      let rM = 3;
+      setCell(rM, 17, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r: rM, c: 17 }, e: { r: rM, c: 22 } }); rM++;
+      foodHeaders.forEach((h, idx) => setCell(rM, 17 + idx, h, styleHeaderBlue)); rM++;
+      if (miscItems.length === 0) {
+        [0,1,2,3,5].forEach(c => setCell(rM, 17 + c, "-", styleDataCell)); setCell(rM, 21, 0, styleAmountGreen); rM++;
+      } else {
+        miscItems.forEach(item => {
+          setCell(rM, 17, item.date, styleDataCell); setCell(rM, 18, item.reason||"-", styleDataCell); setCell(rM, 19, item.amountExpr||item.amount, styleDataCell); setCell(rM, 20, item.remarks||item.paymentType||"-", styleDataCell); setCell(rM, 21, item.amount, styleAmountGreen); setCell(rM, 22, item.status||"Pending", styleDataCell); rM++;
+        });
+      }
+      setCell(rM, 20, "Total", styleTotalRed); setCell(rM, 21, miscSum, styleTotalRed); rM++;
+      if(rM > maxRow) maxRow = rM;
 
-      setCell(rightR, 6, "S.No", styleHeaderBlue); setCell(rightR, 7, "Remark", styleHeaderBlue); setCell(rightR, 8, "Amounts", styleHeaderBlue); rightR++;
-      setCell(rightR, 6, 1, styleSummaryGold); setCell(rightR, 7, "Travel Expenses", styleSummaryGold); setCell(rightR, 8, travelSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, 2, styleSummaryGold); setCell(rightR, 7, "Food Expenses", styleSummaryGold); setCell(rightR, 8, foodSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, 3, styleSummaryGold); setCell(rightR, 7, "Miscellaneous Expenses", styleSummaryGold); setCell(rightR, 8, miscSum, styleAmountGreen); rightR++;
-      setCell(rightR, 6, "", styleTotalRed); setCell(rightR, 7, "Total", styleTotalRed); setCell(rightR, 8, grandTotal, styleTotalRed);
+      // 4. SUMMARY / TOTALIZER SECTION (Cols 24-26)
+      let rS = 3;
+      setCell(rS, 24, "S.No", styleHeaderBlue); setCell(rS, 25, "Advance", styleHeaderBlue); setCell(rS, 26, "Amounts", styleHeaderBlue); rS++;
+      setCell(rS, 24, 1, styleSummaryGold); setCell(rS, 25, trip ? trip.employeeName : appState.currentUser, styleSummaryGold); setCell(rS, 26, advance, styleAmountGreen); rS += 2;
 
-      ws["!cols"] = [{ wch: 14 }, { wch: 22 }, { wch: 16 }, { wch: 18 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 22 }, { wch: 14 }]; ws["!merges"] = merges; ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: Math.max(r, rightR) + 2, c: 9 } });
-      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report"); XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
+      setCell(rS, 24, "S.No", styleHeaderBlue); setCell(rS, 25, "Remark", styleHeaderBlue); setCell(rS, 26, "Amounts", styleHeaderBlue); rS++;
+      setCell(rS, 24, 1, styleSummaryGold); setCell(rS, 25, "Travel Expenses", styleSummaryGold); setCell(rS, 26, travelSum, styleAmountGreen); rS++;
+      setCell(rS, 24, 2, styleSummaryGold); setCell(rS, 25, "Food Expenses", styleSummaryGold); setCell(rS, 26, foodSum, styleAmountGreen); rS++;
+      setCell(rS, 24, 3, styleSummaryGold); setCell(rS, 25, "Miscellaneous Expenses", styleSummaryGold); setCell(rS, 26, miscSum, styleAmountGreen); rS++;
+      setCell(rS, 24, "", styleTotalRed); setCell(rS, 25, "Total", styleTotalRed); setCell(rS, 26, grandTotal, styleTotalRed); rS++;
+      if(rS > maxRow) maxRow = rS;
+
+      ws["!cols"] = [
+        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, // Travel (0-8)
+        { wch: 4 }, // Spacer 9
+        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, // Food (10-15)
+        { wch: 4 }, // Spacer 16
+        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, // Misc (17-22)
+        { wch: 4 }, // Spacer 23
+        { wch: 8 }, { wch: 22 }, { wch: 14 } // Summary (24-26)
+      ];
+
+      ws["!merges"] = merges;
+      ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxRow + 2, c: 26 } });
+      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report");
+      XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
     }
   </script>
 </body>
