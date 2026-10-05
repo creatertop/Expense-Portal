@@ -45,7 +45,6 @@
         <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
         <div class="flex items-center space-x-3">
           
-          <!-- ADMIN ROLE SWITCHER (Strictly Hidden by Default) -->
           <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
             <button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button>
             <button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button>
@@ -67,6 +66,8 @@
               <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 block p-2 font-medium"></select>
               <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip"><i class="fa-solid fa-pen-to-square"></i></button>
               <button onclick="deleteCurrentTrip()" class="p-2 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg text-sm transition" title="Delete Trip"><i class="fa-solid fa-trash-can"></i></button>
+              <!-- REFRESH BUTTON (Solves Request #4) -->
+              <button id="btnRefreshSync" onclick="refreshCloudData()" class="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-600 rounded-lg text-sm transition" title="Sync / Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
           </div>
           <div class="border-l border-slate-200 pl-4 hidden md:block"><div class="text-xs text-slate-500 font-medium">Trip Duration:</div><div id="tripDurationDisplay" class="text-sm font-semibold text-slate-800">--</div></div>
@@ -82,7 +83,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p><h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3></div><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div></div>
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p><h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3></div><div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-indian-rupee-sign"></i></div></div>
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none hover:bg-slate-50 rounded px-1 transition" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p><h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3><span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span></div><div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-scale-balanced"></i></div></div>
       </div>
 
@@ -104,7 +105,7 @@
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method / Notes *</label>
               <div class="grid grid-cols-3 gap-2">
-                <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300 bg-white"><option>UPI</option><option>Cash</option><option>Card</option><option>UPI/Cash</option></select>
+                <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300 bg-white"><option>UPI</option><option>Cash</option><option>Card</option></select>
                 <input type="text" id="fieldRemarkNotes" placeholder="Optional notes" class="col-span-2 text-xs p-2.5 rounded-lg border border-slate-300" />
               </div>
             </div>
@@ -128,14 +129,25 @@
               <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
             </div>
             
-            <div class="border-t border-slate-200 pt-3 space-y-3">
-              <label class="block text-xs font-bold text-slate-700">Receipts (Optional JPG)</label>
-              <div class="grid grid-cols-2 gap-3">
-                <input type="file" id="fileBill" accept="image/*" onchange="previewImageFile(this, 'fileBill')" class="text-[10px]" />
-                <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'filePayment')" class="text-[10px]" />
+            <!-- ATTACHMENTS SECTION (Solves Request #3) -->
+            <div class="border-t border-slate-200 pt-4 mt-4">
+              <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Required *)</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 hover:bg-red-50 transition relative">
+                  <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-camera text-red-500 mr-1.5"></i>Paper Bill (Camera)</label>
+                  <p class="text-[9px] text-slate-500 mb-2 leading-tight">Click photo directly from your phone</p>
+                  <!-- 'capture="environment"' immediately triggers the phone camera -->
+                  <input type="file" id="fileBill" accept="image/*" capture="environment" onchange="previewImageFile(this, 'fileBill')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200" />
+                </div>
+                <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 hover:bg-blue-50 transition relative">
+                  <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-image text-blue-500 mr-1.5"></i>Payment Screenshot</label>
+                  <p class="text-[9px] text-slate-500 mb-2 leading-tight">Upload UPI or Bank App screenshot</p>
+                  <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'filePayment')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+                </div>
               </div>
             </div>
-            <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
+
+            <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-red-700 transition"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
           </form>
         </div>
         
@@ -155,6 +167,28 @@
   <!-- ========================================== -->
   <!-- MODALS -->
   <!-- ========================================== -->
+  
+  <!-- CONFIRMATION MODAL (Solves Request #1) -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
+    <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
+      <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h3 id="confirmTitle" class="font-bold text-xl text-slate-900 mb-2">Are you sure?</h3>
+      <p id="confirmMessage" class="text-sm text-slate-500 mb-6">This action cannot be undone.</p>
+      <div class="flex space-x-3">
+        <button onclick="closeConfirmModal()" class="flex-1 p-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition">Cancel</button>
+        <button onclick="executeConfirm()" class="flex-1 p-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS TOAST MODAL (Solves Request #1) -->
+  <div id="successModal" class="fixed top-8 left-0 right-0 pointer-events-none flex items-start justify-center p-6 z-[200] transition-opacity hidden">
+    <div class="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3">
+      <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-check"></i></div>
+      <div class="font-medium text-sm" id="successMessage">Action completed successfully!</div>
+    </div>
+  </div>
+
   <div id="profileModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="font-bold text-lg mb-4">Edit Profile</h3>
       <form onsubmit="handleProfileSubmit(event)" class="space-y-4">
@@ -190,13 +224,12 @@
     // -------------------------------------------------------------
     // PASTE YOUR LATEST GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbymG-PT4BMiEtCfpZXs-JpOEq-64vHgJ1a28fTV6vSBCJDTjr6SXCWPkNvtqWwgU7vU/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUA4AiJtSuVAsWzTmwIgazfKB488XqnlGAYRy8Sq6Vu-vNIakSMtjnuSjCP2iojLvtJA/exec";
 
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
       currentTripId: null, activeCategory: "Travel", 
-      trips: [], expenses: [],
-      personalTrips: [], personalExpenses: []
+      trips: [], expenses: [], personalTrips: [], personalExpenses: []
     };
     let sessionTimeoutTracker; let authMode = "login"; 
 
@@ -204,6 +237,24 @@
       document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0];
       checkSession();
     });
+
+    // --- CUSTOM MODALS ---
+    let confirmActionCallback = null;
+    function showConfirmModal(title, message, callback) {
+      document.getElementById("confirmTitle").innerText = title;
+      document.getElementById("confirmMessage").innerText = message;
+      confirmActionCallback = callback;
+      document.getElementById("confirmModal").classList.remove("hidden");
+    }
+    function closeConfirmModal() { document.getElementById("confirmModal").classList.add("hidden"); confirmActionCallback = null; }
+    function executeConfirm() { if(confirmActionCallback) confirmActionCallback(); closeConfirmModal(); }
+
+    function showSuccessModal(msg) {
+      const m = document.getElementById("successModal");
+      document.getElementById("successMessage").innerText = msg;
+      m.classList.remove("hidden");
+      setTimeout(() => m.classList.add("hidden"), 3000);
+    }
 
     // --- AUTHENTICATION & ROLE MGMT ---
     function toggleAuthMode() {
@@ -233,7 +284,7 @@
         
         if (result.status === "success") {
           if (authMode === "register") {
-            alert("Account created! Please log in.");
+            showSuccessModal("Account created! Please log in.");
             toggleAuthMode();
             document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = "";
           } else {
@@ -297,6 +348,26 @@
       } catch (e) { alert("Failed to fetch admin data"); renderTripDropdown(); }
     }
 
+    // --- REFRESH CLOUD DATA (Solves Request #4) ---
+    async function refreshCloudData() {
+      const btn = document.getElementById("btnRefreshSync");
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      try {
+        if (appState.currentRole === "admin") {
+          await fetchAllCompanyData();
+        } else {
+          const res = await (await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "login", loginId: appState.employeeId, password: appState.password }) })).json();
+          if(res.status === "success") { 
+            appState.personalTrips = res.trips || []; appState.personalExpenses = res.expenses || [];
+            appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
+          }
+          renderTripDropdown(); recalcStatsAndRender(); saveStorageData();
+        }
+        showSuccessModal("Cloud data synced successfully!");
+      } catch(e) { alert("Sync failed."); }
+      finally { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>'; }
+    }
+
     // --- SESSION & PROFILE ---
     function checkSession() { const exp = localStorage.getItem("expense_session_expiry"); if (exp && Date.now() < parseInt(exp)) { loadStorageData(); showMainApp(); resetSessionTimer(); } else logout(false); }
     function resetSessionTimer() { clearTimeout(sessionTimeoutTracker); localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000)); sessionTimeoutTracker = setTimeout(() => logout(false), 60 * 60 * 1000); }
@@ -322,7 +393,7 @@
       const payload = { action: "updateProfile", oldEmpId: appState.employeeId, name: document.getElementById("modalProfileName").value.trim(), empId: document.getElementById("modalProfileId").value.trim(), email: document.getElementById("modalProfileEmail").value.trim(), password: document.getElementById("modalProfilePassword").value.trim() };
       try {
         const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); const res = await r.json();
-        if (res.status === "success") { appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password; document.getElementById("navEmployeeName").innerText = payload.name; saveStorageData(); closeProfileModal(); alert("Profile updated!"); }
+        if (res.status === "success") { appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password; document.getElementById("navEmployeeName").innerText = payload.name; saveStorageData(); closeProfileModal(); showSuccessModal("Profile updated!"); }
       } catch (err) { alert("Network Error"); } finally { btn.innerHTML = "Save"; btn.disabled = false; }
     }
 
@@ -340,7 +411,6 @@
       if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
     }
 
-    // --- DATA FILTER HELPER (FIXES MIXED EXPENSES BUG) ---
     function getTripExpenses() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId);
       if (!trip) return [];
@@ -379,7 +449,18 @@
       }
     }
     
-    function updateTripAdvance(val) { const trip = appState.trips.find(t => t.id === appState.currentTripId); if (trip) { trip.advance = parseFloat(val) || 0; saveStorageData(); recalcStatsAndRender(); } }
+    // --- ADVANCE BACKGROUND SYNC (Solves Request #2 & #4) ---
+    function updateTripAdvance(val) { 
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
+      if (trip) { 
+        trip.advance = parseFloat(val) || 0; 
+        saveStorageData(); recalcStatsAndRender(); 
+        // Immediately sync to cloud in background
+        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: trip, oldProjectName: null }) });
+        showSuccessModal("Advance updated globally!");
+      } 
+    }
+
     function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); recalcStatsAndRender(); }
     
     function openTripModal(edit) {
@@ -423,13 +504,29 @@
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
     }
 
-    async function deleteCurrentTrip() {
-      if (!appState.currentTripId) return; const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      if (!confirm(`Permanently delete the entire trip "${trip.projectName}" and ALL its expenses?`)) return;
-      const payload = { action: "deleteTrip", employeeName: trip.employeeName, project: trip.projectName };
-      appState.trips = appState.trips.filter(t => t.id !== appState.currentTripId); appState.expenses = appState.expenses.filter(e => e.project !== trip.projectName); appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
-      saveStorageData(); renderTripDropdown(); recalcStatsAndRender();
-      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+    // --- DELETE MODALS (Solves Request #1) ---
+    function deleteCurrentTrip() {
+      if (!appState.currentTripId) return; 
+      const trip = appState.trips.find(t => t.id === appState.currentTripId);
+      
+      showConfirmModal("Delete Entire Trip?", `Permanently delete "${trip.projectName}" and ALL its expenses?`, () => {
+        const payload = { action: "deleteTrip", employeeName: trip.employeeName, project: trip.projectName };
+        appState.trips = appState.trips.filter(t => t.id !== appState.currentTripId); appState.expenses = appState.expenses.filter(e => e.project !== trip.projectName); appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
+        saveStorageData(); renderTripDropdown(); recalcStatsAndRender();
+        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        showSuccessModal("Trip deleted successfully!");
+      });
+    }
+
+    function deleteExpense(expId) {
+      const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
+      
+      showConfirmModal("Delete Expense?", "Permanently delete this logged item? This cannot be undone.", () => {
+        const payload = { action: "deleteExpense", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount };
+        appState.expenses = appState.expenses.filter(e => e.id !== expId); saveStorageData(); recalcStatsAndRender();
+        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        showSuccessModal("Expense removed successfully!");
+      });
     }
 
     // --- EXPENSES & STATUS APPROVAL ---
@@ -448,9 +545,11 @@
     async function previewImageFile(input, type) { if(input.files && input.files[0]) { const b64 = await compressImageToJpeg(input.files[0]); if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; } }
     function evaluateMathAmount(expr) { if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, ""); try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } catch (e) { return parseFloat(clean) || 0; } }
 
+    // --- OPTIMISTIC UI SAVE (Solves Request #5) ---
     async function handleFormSubmit(e) {
-      e.preventDefault(); if(appState.trips.length === 0) { alert("Please create a Trip first!"); return; }
-      const btn = document.getElementById("btnSaveExpense"); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...';
+      e.preventDefault(); 
+      if(appState.trips.length === 0) { showSuccessModal("Please create a Trip first!"); return; }
+      
       const t = appState.trips.find(x=>x.id===appState.currentTripId);
       const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
       
@@ -464,19 +563,21 @@
       else if (appState.activeCategory === "Rent") { payload.roomLocation = document.getElementById("rentLocation").value.trim(); payload.rentType = document.getElementById("rentDurationType").value; payload.roomType = document.getElementById("rentRoomType").value; payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")"; } 
       else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
       
-      try {
-        const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        const res = await r.json();
-        if(res.status==="success") { appState.expenses.push(payload); saveStorageData(); recalcStatsAndRender(); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null; alert("Saved successfully!"); } else alert("Error: " + res.message);
-      } catch(err) { alert("Network Error: " + err.message); } finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; }
-    }
+      // OPTIMISTIC UPDATE: Visually save instantly and clear form. No waiting!
+      appState.expenses.push(payload); 
+      saveStorageData(); 
+      recalcStatsAndRender(); 
+      document.getElementById("expenseForm").reset(); 
+      currentCompressedBill=null; 
+      currentCompressedPay=null;
+      
+      showSuccessModal("Saved locally! Uploading to cloud in background...");
 
-    async function deleteExpense(expId) {
-      if (!confirm("Permanently delete this expense?")) return;
-      const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
-      const payload = { action: "deleteExpense", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount };
-      appState.expenses = appState.expenses.filter(e => e.id !== expId); saveStorageData(); recalcStatsAndRender();
-      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+      // Send to backend silently without making the user wait
+      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
+        .then(r => r.json())
+        .then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); })
+        .catch(err => console.error("Background sync failed", err));
     }
 
     function recalcStatsAndRender() {
@@ -541,7 +642,6 @@
     }
 
     // --- ZIP EXPORTS WITH PROXY FETCHER ---
-    // --- EXPORTS ---
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); 
       const tripExpenses = getTripExpenses();
@@ -554,21 +654,16 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Fetching Images...';
       btn.disabled = true;
 
-      // 1. Gather all Google Drive URLs that need to be fetched
       const driveUrlsToFetch = [];
       itemsWithImages.forEach(item => {
         if (item.billUrl && item.billUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.billUrl);
         if (item.payUrl && item.payUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.payUrl);
       });
 
-      // 2. Ask the GAS Backend to securely fetch the real images from Drive
       let cloudImages = {};
       if (driveUrlsToFetch.length > 0) {
         try {
-          const r = await fetch(SCRIPT_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "fetchImagesForZip", urls: driveUrlsToFetch }) 
-          });
+          const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "fetchImagesForZip", urls: driveUrlsToFetch }) });
           const res = await r.json();
           if (res.status === "success" && res.images) cloudImages = res.images;
         } catch(e) { console.error("Cloud fetch failed", e); }
@@ -576,15 +671,12 @@
 
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Zipping...';
 
-      // 3. Build the ZIP File
       const zip = new JSZip(); 
       const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
       const rootFolder = zip.folder(`${projClean}_Receipts`);
       
       const folderMap = {}; 
-      ["Travel", "Food", "Rent", "Others"].forEach(cat => { 
-        folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; 
-      });
+      ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
 
       const nameCounters = {};
 
@@ -599,7 +691,6 @@
         const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
         const finalFileName = `${baseKey}${suffix}.jpg`;
 
-        // Look up the securely fetched Base64 image
         const resolveB64 = (localB64, driveUrl) => {
           if (localB64 && localB64.startsWith("data:image")) return localB64.split(",")[1];
           if (driveUrl && cloudImages[driveUrl]) return cloudImages[driveUrl];
@@ -613,7 +704,6 @@
         if (payB64) folderMap[cat].payments.file(finalFileName, payB64, { base64: true });
       });
 
-      // 4. Download
       const blob = await zip.generateAsync({ type: "blob" });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
