@@ -9,10 +9,13 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -59,341 +62,280 @@
           <button onclick="logout()" class="bg-slate-800 hover:bg-red-600 border border-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition text-xs font-bold flex items-center"><i class="fa-solid fa-right-from-bracket sm:mr-1"></i> <span class="hidden sm:inline">Sign Out</span></button>
         </div>
       </div>
+      <!-- TOP NAVIGATION TABS -->
+      <div id="topNavBar" class="bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6">
+        <button id="tabLogBtn" onclick="switchMainTab('log')" class="py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition"><i class="fa-solid fa-pen-to-square mr-2"></i> Log Expense</button>
+        <button id="tabDashBtn" onclick="switchMainTab('dash')" class="py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition"><i class="fa-solid fa-chart-simple mr-2"></i> Employee Dashboard</button>
+      </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
-      <!-- TRIP SELECTOR -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
-        <div class="flex flex-wrap items-center gap-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Current Active Trip</label>
-            <div class="flex items-center space-x-2">
-              <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 block p-2 font-medium"></select>
-              <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip"><i class="fa-solid fa-pen-to-square"></i></button>
-              <button onclick="deleteCurrentTrip()" class="p-2 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg text-sm transition" title="Delete Trip"><i class="fa-solid fa-trash-can"></i></button>
-              <button id="btnRefreshSync" onclick="refreshCloudData()" class="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-600 rounded-lg text-sm transition" title="Sync / Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
-            </div>
-          </div>
-          <div class="border-l border-slate-200 pl-4 hidden md:block"><div class="text-xs text-slate-500 font-medium">Trip Duration:</div><div id="tripDurationDisplay" class="text-sm font-semibold text-slate-800">--</div></div>
-        </div>
-        <div class="flex items-center space-x-2">
-          <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
-          <button onclick="exportToStyledExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel</button>
-          <button id="btnZipExport" onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)</button>
-        </div>
-      </div>
-
-      <!-- SUMMARY CARDS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p><h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3></div><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div></div>
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p><h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3></div><div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-indian-rupee-sign"></i></div></div>
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none hover:bg-slate-50 rounded px-1 transition" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p><h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3><span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span></div><div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-scale-balanced"></i></div></div>
-      </div>
-
-      <!-- MAIN INPUT GRID -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4"><h2 class="font-bold text-base text-slate-900 flex items-center"><i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense</h2></div>
-          <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-lg mb-4 text-xs font-medium">
-            <button type="button" onclick="setExpenseType('Travel')" id="tab-Travel" class="py-2 rounded-md transition shadow-sm bg-white text-red-600 font-bold">Travel</button>
-            <button type="button" onclick="setExpenseType('Food')" id="tab-Food" class="py-2 rounded-md transition text-slate-600">Food</button>
-            <button type="button" onclick="setExpenseType('Rent')" id="tab-Rent" class="py-2 rounded-md transition text-slate-600">Rent</button>
-            <button type="button" onclick="setExpenseType('Others')" id="tab-Others" class="py-2 rounded-md transition text-slate-600">Others</button>
-          </div>
-          <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div><label class="block text-xs font-bold text-slate-700 mb-1">Expense Date *</label><input type="date" id="fieldDate" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
-              <div><label class="block text-xs font-bold text-slate-700 mb-1">Amount (₹) *</label><input type="text" id="fieldAmount" placeholder="e.g. 100+250" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
-            </div>
+      
+      <!-- ========================================== -->
+      <!-- VIEW: LOG EXPENSE -->
+      <!-- ========================================== -->
+      <div id="viewLog">
+        <!-- TRIP SELECTOR -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
+          <div class="flex flex-wrap items-center gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method / Notes *</label>
-              <div class="grid grid-cols-3 gap-2">
-                <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300 bg-white"><option>UPI</option><option>Cash</option><option>Card</option></select>
-                <input type="text" id="fieldRemarkNotes" placeholder="Optional notes" class="col-span-2 text-xs p-2.5 rounded-lg border border-slate-300" />
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Current Active Trip</label>
+              <div class="flex items-center space-x-2">
+                <select id="tripSelect" onchange="onTripChange()" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-red-500 block p-2 font-medium"></select>
+                <button onclick="openTripModal(true)" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm transition" title="Edit Trip"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteCurrentTrip()" class="p-2 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 rounded-lg text-sm transition" title="Delete Trip"><i class="fa-solid fa-trash-can"></i></button>
+                <button id="btnRefreshSync" onclick="refreshCloudData()" class="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-600 rounded-lg text-sm transition" title="Sync / Refresh Data"><i class="fa-solid fa-arrows-rotate"></i></button>
               </div>
             </div>
-            
-            <div id="fieldsTravel" class="space-y-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
-              <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-              <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-              <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-              <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
-            </div>
-            <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-              <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
-              <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
-            </div>
-            <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-              <input type="text" id="rentLocation" placeholder="Location *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-              <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per Month</option></select>
-              <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
-            </div>
-            <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
-              <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
-            </div>
-            
-            <div class="border-t border-slate-200 pt-4 mt-4">
-              <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Required *)</label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 hover:bg-red-50 transition relative">
-                  <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-camera text-red-500 mr-1.5"></i>Paper Bill (Camera)</label>
-                  <p class="text-[9px] text-slate-500 mb-2 leading-tight">Click photo directly from your phone</p>
-                  <input type="file" id="fileBill" accept="image/*" capture="environment" onchange="previewImageFile(this, 'fileBill')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200" />
-                </div>
-                <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 hover:bg-blue-50 transition relative">
-                  <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-image text-blue-500 mr-1.5"></i>Payment Screenshot</label>
-                  <p class="text-[9px] text-slate-500 mb-2 leading-tight">Upload UPI or Bank App screenshot</p>
-                  <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'filePayment')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-red-700 transition"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
-          </form>
-        </div>
-        
-        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-            <h2 class="font-bold text-base text-slate-900">Logged Items</h2>
-            <div class="flex space-x-2">
-              <select id="categoryFilter" onchange="recalcStatsAndRender()" class="text-xs p-1.5 rounded-md border border-slate-300 bg-slate-50"><option value="All">All Categories</option><option value="Travel">Travel</option><option value="Food">Food</option><option value="Rent">Rent</option><option value="Others">Others</option></select>
-            </div>
+            <div class="border-l border-slate-200 pl-4 hidden md:block"><div class="text-xs text-slate-500 font-medium">Trip Duration:</div><div id="tripDurationDisplay" class="text-sm font-semibold text-slate-800">--</div></div>
           </div>
-          <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1"></div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openTripModal(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-plus mr-1.5"></i> New Trip</button>
+            <button onclick="exportToStyledExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-excel mr-1.5"></i> Export Excel</button>
+            <button id="btnZipExport" onclick="downloadOrganizedReceiptsZip()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-medium px-4 py-2 rounded-lg shadow-sm transition"><i class="fa-solid fa-file-zipper mr-1.5"></i> Receipts (.zip)</button>
+          </div>
+        </div>
+
+        <!-- SUMMARY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p><h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3></div><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div></div>
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p><h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3></div><div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-indian-rupee-sign"></i></div></div>
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none hover:bg-slate-50 rounded px-1 transition" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p><h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3><span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span></div><div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-scale-balanced"></i></div></div>
+        </div>
+
+        <!-- MAIN INPUT GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4"><h2 id="formTitle" class="font-bold text-base text-slate-900 flex items-center"><i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense</h2></div>
+            <div class="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-lg mb-4 text-xs font-medium">
+              <button type="button" onclick="setExpenseType('Travel')" id="tab-Travel" class="py-2 rounded-md transition shadow-sm bg-white text-red-600 font-bold">Travel</button>
+              <button type="button" onclick="setExpenseType('Food')" id="tab-Food" class="py-2 rounded-md transition text-slate-600">Food</button>
+              <button type="button" onclick="setExpenseType('Rent')" id="tab-Rent" class="py-2 rounded-md transition text-slate-600">Rent</button>
+              <button type="button" onclick="setExpenseType('Others')" id="tab-Others" class="py-2 rounded-md transition text-slate-600">Others</button>
+            </div>
+            <form id="expenseForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Expense Date *</label><input type="date" id="fieldDate" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
+                <div><label class="block text-xs font-bold text-slate-700 mb-1">Amount (₹) *</label><input type="text" id="fieldAmount" placeholder="e.g. 100+250" required class="w-full text-xs p-2.5 rounded-lg border border-slate-300" /></div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method / Notes *</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <select id="fieldPaymentType" required class="col-span-1 text-xs p-2.5 rounded-lg border border-slate-300 bg-white"><option>UPI</option><option>Cash</option><option>Card</option></select>
+                  <input type="text" id="fieldRemarkNotes" placeholder="Optional notes" class="col-span-2 text-xs p-2.5 rounded-lg border border-slate-300" />
+                </div>
+              </div>
+              
+              <div id="fieldsTravel" class="space-y-3 p-3 bg-red-50/50 rounded-lg border border-red-100">
+                <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+                <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+                <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
+              </div>
+              <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
+                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
+                <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
+              </div>
+              <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                <input type="text" id="rentLocation" placeholder="Location *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
+                <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per Month</option></select>
+                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
+              </div>
+              <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
+                <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
+              </div>
+              
+              <div class="border-t border-slate-200 pt-4 mt-4">
+                <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Optional if editing)</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 hover:bg-red-50 transition relative">
+                    <!-- Removed 'capture="environment"' to allow Camera OR Gallery on mobile -->
+                    <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-camera text-red-500 mr-1.5"></i>Paper Bill (Cam/Gallery)</label>
+                    <p class="text-[9px] text-slate-500 mb-2 leading-tight">Click photo or upload file</p>
+                    <input type="file" id="fileBill" accept="image/*" onchange="previewImageFile(this, 'fileBill')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200" />
+                  </div>
+                  <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 hover:bg-blue-50 transition relative">
+                    <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-image text-blue-500 mr-1.5"></i>Payment Screenshot</label>
+                    <p class="text-[9px] text-slate-500 mb-2 leading-tight">Upload UPI or Bank App screenshot</p>
+                    <input type="file" id="filePayment" accept="image/*" onchange="previewImageFile(this, 'filePayment')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex space-x-2">
+                <button type="button" id="btnCancelEdit" onclick="cancelEdit()" class="hidden w-1/3 bg-slate-200 text-slate-700 font-bold py-3 rounded-lg mt-4 shadow hover:bg-slate-300 transition">Cancel</button>
+                <button type="submit" id="btnSaveExpense" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-red-700 transition"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Database</button>
+              </div>
+            </form>
+          </div>
+          
+          <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <h2 class="font-bold text-base text-slate-900">Logged Items</h2>
+              <div class="flex space-x-2">
+                <select id="categoryFilter" onchange="recalcStatsAndRender()" class="text-xs p-1.5 rounded-md border border-slate-300 bg-slate-50"><option value="All">All Categories</option><option value="Travel">Travel</option><option value="Food">Food</option><option value="Rent">Rent</option><option value="Others">Others</option></select>
+              </div>
+            </div>
+            <div id="expenseListContainer" class="flex-1 overflow-y-auto max-h-[560px] space-y-2.5 pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- VIEW: EMPLOYEE DASHBOARD -->
+      <!-- ========================================== -->
+      <div id="viewDash" class="hidden space-y-6">
+        <div class="flex items-center justify-between pb-2">
+          <h2 class="text-2xl font-bold text-slate-900" id="dashUserName">Employee Dashboard</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Lifetime Claimed</p><h3 id="dashTotalClaimed" class="text-3xl font-bold text-slate-900 mt-1">₹0.00</h3></div><div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm"><i class="fa-solid fa-file-invoice"></i></div></div>
+          <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Advances</p><h3 id="dashTotalAdvance" class="text-3xl font-bold text-slate-900 mt-1">₹0.00</h3></div><div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-sm"><i class="fa-solid fa-money-bill-transfer"></i></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col"><h3 class="font-bold text-lg text-slate-900 mb-2">Category Breakdown</h3><p class="text-xs text-slate-500 mb-4">Total lifetime spending by category</p><div class="flex-1 min-h-[250px] relative"><canvas id="categoryChart"></canvas></div></div>
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col"><h3 class="font-bold text-lg text-slate-900 mb-2">Spending by Trip</h3><p class="text-xs text-slate-500 mb-4">Total amount spent per project</p><div class="flex-1 min-h-[250px] relative"><canvas id="tripChart"></canvas></div></div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-bold text-lg text-slate-900 mb-5">My Trips History</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead><tr class="border-b-2 border-slate-200 text-xs text-slate-500 uppercase tracking-wider"><th class="pb-3 font-bold">Trip / Project</th><th class="pb-3 font-bold">Dates</th><th class="pb-3 font-bold text-right">Advance</th><th class="pb-3 font-bold text-right">Total Spent</th><th class="pb-3 font-bold text-right">Net Balance</th><th class="pb-3 text-center font-bold">Status</th></tr></thead>
+              <tbody id="dashTripsTbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- ========================================== -->
   <!-- MODALS -->
-  <!-- ========================================== -->
-  <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
-    <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
-      <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <h3 id="confirmTitle" class="font-bold text-xl text-slate-900 mb-2">Are you sure?</h3>
-      <p id="confirmMessage" class="text-sm text-slate-500 mb-6">This action cannot be undone.</p>
-      <div class="flex space-x-3">
-        <button onclick="closeConfirmModal()" class="flex-1 p-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition">Cancel</button>
-        <button onclick="executeConfirm()" class="flex-1 p-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">Yes, Delete</button>
-      </div>
-    </div>
-  </div>
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity"><div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center"><div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation"></i></div><h3 id="confirmTitle" class="font-bold text-xl text-slate-900 mb-2">Are you sure?</h3><p id="confirmMessage" class="text-sm text-slate-500 mb-6">This action cannot be undone.</p><div class="flex space-x-3"><button onclick="closeConfirmModal()" class="flex-1 p-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition">Cancel</button><button onclick="executeConfirm()" class="flex-1 p-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition">Yes, Delete</button></div></div></div>
+  <div id="successModal" class="fixed top-8 left-0 right-0 pointer-events-none flex items-start justify-center p-6 z-[200] transition-opacity hidden"><div class="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3"><div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-check"></i></div><div class="font-medium text-sm" id="successMessage">Action completed successfully!</div></div></div>
+  <div id="profileModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="font-bold text-lg mb-4">Edit Profile</h3><form onsubmit="handleProfileSubmit(event)" class="space-y-4"><input type="text" id="modalProfileName" class="w-full p-2 border rounded text-sm" placeholder="Display Name" /><input type="text" id="modalProfileId" class="w-full p-2 border rounded text-sm" placeholder="Employee ID" /><input type="email" id="modalProfileEmail" class="w-full p-2 border rounded text-sm" placeholder="Email" /><input type="text" id="modalProfilePassword" class="w-full p-2 border rounded text-sm" placeholder="Password" /><button type="submit" id="btnUpdateProfile" class="w-full bg-red-600 text-white p-2 rounded font-bold">Save</button><button type="button" onclick="closeProfileModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
+  <div id="tripModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="modalTripTitle" class="font-bold text-lg mb-4">Trip Details</h3><form onsubmit="handleTripModalSubmit(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-700">Project Name</label><input type="text" id="modalProjectName" required class="w-full p-2 border rounded" /></div><div class="flex gap-2"><div class="w-1/2"><label class="text-xs font-bold text-slate-700">Start Date</label><input type="date" id="modalStartDate" required class="w-full p-2 border rounded text-sm" /></div><div class="w-1/2"><label class="text-xs font-bold text-slate-700">End Date</label><input type="date" id="modalEndDate" required class="w-full p-2 border rounded text-sm" /></div></div><div><label class="text-xs font-bold text-slate-700">Initial Advance (₹)</label><input type="number" id="modalAdvance" placeholder="0" class="w-full p-2 border rounded" /></div><button type="submit" id="btnSaveTrip" class="w-full bg-red-600 text-white font-bold p-2 rounded">Save Trip</button><button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
 
-  <div id="successModal" class="fixed top-8 left-0 right-0 pointer-events-none flex items-start justify-center p-6 z-[200] transition-opacity hidden">
-    <div class="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3">
-      <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white"><i class="fa-solid fa-check"></i></div>
-      <div class="font-medium text-sm" id="successMessage">Action completed successfully!</div>
-    </div>
-  </div>
-
-  <div id="profileModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="font-bold text-lg mb-4">Edit Profile</h3>
-      <form onsubmit="handleProfileSubmit(event)" class="space-y-4">
-        <input type="text" id="modalProfileName" class="w-full p-2 border rounded text-sm" placeholder="Display Name" />
-        <input type="text" id="modalProfileId" class="w-full p-2 border rounded text-sm" placeholder="Employee ID" />
-        <input type="email" id="modalProfileEmail" class="w-full p-2 border rounded text-sm" placeholder="Email" />
-        <input type="text" id="modalProfilePassword" class="w-full p-2 border rounded text-sm" placeholder="Password" />
-        <button type="submit" id="btnUpdateProfile" class="w-full bg-red-600 text-white p-2 rounded font-bold">Save</button>
-        <button type="button" onclick="closeProfileModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="tripModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="modalTripTitle" class="font-bold text-lg mb-4">Trip Details</h3>
-      <form onsubmit="handleTripModalSubmit(event)" class="space-y-4">
-        <div><label class="text-xs font-bold text-slate-700">Project Name</label><input type="text" id="modalProjectName" required class="w-full p-2 border rounded" /></div>
-        <div class="flex gap-2">
-          <div class="w-1/2"><label class="text-xs font-bold text-slate-700">Start Date</label><input type="date" id="modalStartDate" required class="w-full p-2 border rounded text-sm" /></div>
-          <div class="w-1/2"><label class="text-xs font-bold text-slate-700">End Date</label><input type="date" id="modalEndDate" required class="w-full p-2 border rounded text-sm" /></div>
-        </div>
-        <div><label class="text-xs font-bold text-slate-700">Initial Advance (₹)</label><input type="number" id="modalAdvance" placeholder="0" class="w-full p-2 border rounded" /></div>
-        <button type="submit" id="btnSaveTrip" class="w-full bg-red-600 text-white font-bold p-2 rounded">Save Trip</button>
-        <button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- JAVASCRIPT APP LOGIC -->
-  <!-- ========================================== -->
   <script>
     // -------------------------------------------------------------
     // PASTE YOUR LATEST GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUA4AiJtSuVAsWzTmwIgazfKB488XqnlGAYRy8Sq6Vu-vNIakSMtjnuSjCP2iojLvtJA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjHcWFMcYBwkGMyr5wJqShHd9dz40Pulj0XB048DlolGiNVLjlZ5id81OeiOpFqo7nLg/exec";
 
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
-      currentTripId: null, activeCategory: "Travel", 
+      currentTripId: null, activeCategory: "Travel", editingExpenseId: null,
       trips: [], expenses: [], personalTrips: [], personalExpenses: []
     };
     let sessionTimeoutTracker; let authMode = "login"; 
+    let categoryChartInstance = null; let tripChartInstance = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0];
       checkSession();
     });
 
+    // --- TAB SWITCHER LOGIC ---
+    function switchMainTab(tabName) {
+      if(tabName === 'log') {
+        document.getElementById('viewLog').classList.remove('hidden'); document.getElementById('viewDash').classList.add('hidden');
+        document.getElementById('tabLogBtn').className = "py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition";
+        document.getElementById('tabDashBtn').className = "py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition";
+      } else {
+        document.getElementById('viewLog').classList.add('hidden'); document.getElementById('viewDash').classList.remove('hidden');
+        document.getElementById('tabDashBtn').className = "py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition";
+        document.getElementById('tabLogBtn').className = "py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition";
+        renderDashboard();
+      }
+    }
+
     // --- CUSTOM MODALS ---
     let confirmActionCallback = null;
-    function showConfirmModal(title, message, callback) {
-      document.getElementById("confirmTitle").innerText = title;
-      document.getElementById("confirmMessage").innerText = message;
-      confirmActionCallback = callback;
-      document.getElementById("confirmModal").classList.remove("hidden");
-    }
+    function showConfirmModal(title, message, callback) { document.getElementById("confirmTitle").innerText = title; document.getElementById("confirmMessage").innerText = message; confirmActionCallback = callback; document.getElementById("confirmModal").classList.remove("hidden"); }
     function closeConfirmModal() { document.getElementById("confirmModal").classList.add("hidden"); confirmActionCallback = null; }
     function executeConfirm() { if(confirmActionCallback) confirmActionCallback(); closeConfirmModal(); }
-
-    function showSuccessModal(msg) {
-      const m = document.getElementById("successModal");
-      document.getElementById("successMessage").innerText = msg;
-      m.classList.remove("hidden");
-      setTimeout(() => m.classList.add("hidden"), 3000);
-    }
+    function showSuccessModal(msg) { const m = document.getElementById("successModal"); document.getElementById("successMessage").innerText = msg; m.classList.remove("hidden"); setTimeout(() => m.classList.add("hidden"), 3000); }
 
     // --- AUTHENTICATION & ROLE MGMT ---
     function toggleAuthMode() {
       authMode = authMode === "login" ? "register" : "login";
-      document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login");
-      document.getElementById("emailFieldGroup").classList.toggle("hidden", authMode === "login");
-      document.getElementById("authName").required = authMode === "register";
-      document.getElementById("authEmail").required = authMode === "register";
+      document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login"); document.getElementById("emailFieldGroup").classList.toggle("hidden", authMode === "login");
+      document.getElementById("authName").required = authMode === "register"; document.getElementById("authEmail").required = authMode === "register";
       document.getElementById("authIdLabel").innerHTML = authMode === "login" ? 'Employee ID or Email <span class="text-red-500">*</span>' : 'Employee ID <span class="text-red-500">*</span>';
-      document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account";
-      document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
+      document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account"; document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
       document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Register Account <i class="fa-solid fa-user-plus ml-2"></i>';
       document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
     }
 
     async function handleAuthSubmit(e) {
       e.preventDefault();
-      const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...'; btn.disabled = true;
-
+      const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...'; btn.disabled = true;
       const payload = { action: authMode, name: document.getElementById("authName").value.trim(), empId: document.getElementById("authId").value.trim(), email: document.getElementById("authEmail").value.trim(), password: document.getElementById("authPassword").value.trim() };
       if (authMode === "login") payload.loginId = document.getElementById("authId").value.trim();
-
       try {
         const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
-        
         if (result.status === "success") {
-          if (authMode === "register") {
-            showSuccessModal("Account created! Please log in.");
-            toggleAuthMode();
-            document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = "";
-          } else {
+          if (authMode === "register") { showSuccessModal("Account created! Please log in."); toggleAuthMode(); document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = ""; } 
+          else {
             appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password;
             appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
-            
-            if(appState.userRole === "Admin") {
-              document.getElementById("adminControlsContainer").style.display = "flex";
-              appState.currentRole = "admin";
-            } else {
-              document.getElementById("adminControlsContainer").style.display = "none";
-              appState.currentRole = "employee";
-            }
-
-            appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : [];
-            appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : [];
+            if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; appState.currentRole = "admin"; } else { document.getElementById("adminControlsContainer").style.display = "none"; appState.currentRole = "employee"; }
+            appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : []; appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : [];
             appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
             appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
-            
-            localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000));
-            saveStorageData(); 
-            
-            if(appState.userRole === "Admin") { showMainApp(); await fetchAllCompanyData(); } 
-            else { showMainApp(); }
-            
+            localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000)); saveStorageData(); 
+            if(appState.userRole === "Admin") { showMainApp(); await fetchAllCompanyData(); } else { showMainApp(); }
             document.getElementById("authForm").reset();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 315."); }
-      finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 400."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
     async function switchRole(role) {
-      appState.currentRole = role;
-      const empBtn = document.getElementById("roleEmployeeBtn"); const admBtn = document.getElementById("roleAdminBtn");
-      
-      if (role === "admin") {
-        admBtn.className = "px-3 py-1 rounded bg-amber-600 text-white font-medium transition";
-        empBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition";
-        await fetchAllCompanyData();
-      } else {
-        empBtn.className = "px-3 py-1 rounded bg-red-600 text-white font-medium transition";
-        admBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition";
-        appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
-        appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
-        renderTripDropdown(); recalcStatsAndRender();
-      }
+      appState.currentRole = role; const empBtn = document.getElementById("roleEmployeeBtn"); const admBtn = document.getElementById("roleAdminBtn");
+      if (role === "admin") { admBtn.className = "px-3 py-1 rounded bg-amber-600 text-white font-medium transition"; empBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"; await fetchAllCompanyData(); } 
+      else { empBtn.className = "px-3 py-1 rounded bg-red-600 text-white font-medium transition"; admBtn.className = "px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"; appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null; renderTripDropdown(); recalcStatsAndRender(); if(!document.getElementById('viewDash').classList.contains('hidden')) renderDashboard(); }
     }
 
     async function fetchAllCompanyData() {
       document.getElementById("tripSelect").innerHTML = '<option>Loading company data...</option>';
-      try {
-        const payload = { action: "fetchAdminData" };
-        const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        const res = await r.json();
-        if(res.status === "success") {
-          appState.trips = res.trips || []; appState.expenses = res.expenses || [];
-          appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
-          renderTripDropdown(); recalcStatsAndRender();
-        }
-      } catch (e) { alert("Failed to fetch admin data"); renderTripDropdown(); }
+      try { const payload = { action: "fetchAdminData" }; const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); const res = await r.json(); if(res.status === "success") { appState.trips = res.trips || []; appState.expenses = res.expenses || []; appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null; renderTripDropdown(); recalcStatsAndRender(); if(!document.getElementById('viewDash').classList.contains('hidden')) renderDashboard(); } } catch (e) { alert("Failed to fetch admin data"); renderTripDropdown(); }
     }
 
     async function refreshCloudData() {
-      const btn = document.getElementById("btnRefreshSync");
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      const btn = document.getElementById("btnRefreshSync"); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
       try {
-        if (appState.currentRole === "admin") {
-          await fetchAllCompanyData();
-        } else {
-          const res = await (await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "login", loginId: appState.employeeId, password: appState.password }) })).json();
-          if(res.status === "success") { 
-            appState.personalTrips = res.trips || []; appState.personalExpenses = res.expenses || [];
-            appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
-          }
-          renderTripDropdown(); recalcStatsAndRender(); saveStorageData();
-        }
+        if (appState.currentRole === "admin") { await fetchAllCompanyData(); } 
+        else { const res = await (await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "login", loginId: appState.employeeId, password: appState.password }) })).json(); if(res.status === "success") { appState.personalTrips = res.trips || []; appState.personalExpenses = res.expenses || []; appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; } renderTripDropdown(); recalcStatsAndRender(); saveStorageData(); if(!document.getElementById('viewDash').classList.contains('hidden')) renderDashboard(); }
         showSuccessModal("Cloud data synced successfully!");
-      } catch(e) { alert("Sync failed."); }
-      finally { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>'; }
+      } catch(e) { alert("Sync failed."); } finally { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>'; }
     }
 
     // --- SESSION & PROFILE ---
     function checkSession() { const exp = localStorage.getItem("expense_session_expiry"); if (exp && Date.now() < parseInt(exp)) { loadStorageData(); showMainApp(); resetSessionTimer(); } else logout(false); }
     function resetSessionTimer() { clearTimeout(sessionTimeoutTracker); localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000)); sessionTimeoutTracker = setTimeout(() => logout(false), 60 * 60 * 1000); }
     document.addEventListener("mousemove", () => { if(!document.getElementById("mainApp").classList.contains("hidden")) resetSessionTimer(); });
-    function logout(manual = true) { localStorage.removeItem("expense_session_expiry"); document.getElementById("mainApp").classList.add("hidden"); document.getElementById("mainApp").classList.remove("flex"); document.getElementById("authScreen").classList.remove("hidden"); }
+    function logout(manual = true) { localStorage.removeItem("expense_session_expiry"); document.getElementById("mainApp").classList.add("hidden"); document.getElementById("mainApp").classList.remove("flex"); document.getElementById("authScreen").classList.remove("hidden"); switchMainTab('log'); }
 
     function showMainApp() {
       document.getElementById("authScreen").classList.add("hidden"); document.getElementById("mainApp").classList.remove("hidden"); document.getElementById("mainApp").classList.add("flex");
       document.getElementById("navEmployeeName").innerText = appState.currentUser;
-      
       if(appState.trips.length === 0 && appState.currentRole !== 'admin') { appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); appState.currentTripId = "trip_1"; saveStorageData(); }
+      if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; } else { document.getElementById("adminControlsContainer").style.display = "none"; }
       
-      if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; } 
-      else { document.getElementById("adminControlsContainer").style.display = "none"; }
-      
+      // HIDE DASHBOARD IF RUNNING AS APK (Standalone PWA)
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        document.getElementById('tabDashBtn').classList.add('hidden');
+        document.getElementById('topNavBar').className = "bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6 pb-2"; // Adjust padding
+        switchMainTab('log');
+      }
       renderTripDropdown(); recalcStatsAndRender();
     }
 
     function openProfileModal() { document.getElementById("modalProfileName").value = appState.currentUser; document.getElementById("modalProfileId").value = appState.employeeId; document.getElementById("modalProfileEmail").value = appState.email; document.getElementById("modalProfilePassword").value = appState.password; document.getElementById("profileModal").classList.remove("hidden"); }
     function closeProfileModal() { document.getElementById("profileModal").classList.add("hidden"); }
-    async function handleProfileSubmit(e) {
-      e.preventDefault(); const btn = document.getElementById("btnUpdateProfile"); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
-      const payload = { action: "updateProfile", oldEmpId: appState.employeeId, name: document.getElementById("modalProfileName").value.trim(), empId: document.getElementById("modalProfileId").value.trim(), email: document.getElementById("modalProfileEmail").value.trim(), password: document.getElementById("modalProfilePassword").value.trim() };
-      try {
-        const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); const res = await r.json();
-        if (res.status === "success") { appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password; document.getElementById("navEmployeeName").innerText = payload.name; saveStorageData(); closeProfileModal(); showSuccessModal("Profile updated!"); }
-      } catch (err) { alert("Network Error"); } finally { btn.innerHTML = "Save"; btn.disabled = false; }
-    }
+    async function handleProfileSubmit(e) { e.preventDefault(); const btn = document.getElementById("btnUpdateProfile"); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true; const payload = { action: "updateProfile", oldEmpId: appState.employeeId, name: document.getElementById("modalProfileName").value.trim(), empId: document.getElementById("modalProfileId").value.trim(), email: document.getElementById("modalProfileEmail").value.trim(), password: document.getElementById("modalProfilePassword").value.trim() }; try { const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); const res = await r.json(); if (res.status === "success") { appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password; document.getElementById("navEmployeeName").innerText = payload.name; saveStorageData(); closeProfileModal(); showSuccessModal("Profile updated!"); } } catch (err) { alert("Network Error"); } finally { btn.innerHTML = "Save"; btn.disabled = false; } }
 
     function loadStorageData() {
       appState.currentUser = localStorage.getItem("expense_current_user"); appState.employeeId = localStorage.getItem("expense_employee_id"); appState.email = localStorage.getItem("expense_email"); appState.password = localStorage.getItem("expense_password"); appState.userRole = localStorage.getItem("expense_user_role") || "Employee";
@@ -404,100 +346,68 @@
     }
     function saveStorageData() {
       if(appState.currentRole === "employee") { appState.personalTrips = [...appState.trips]; appState.personalExpenses = [...appState.expenses]; }
-      localStorage.setItem("expense_current_user", appState.currentUser); localStorage.setItem("expense_employee_id", appState.employeeId); localStorage.setItem("expense_email", appState.email); localStorage.setItem("expense_password", appState.password); localStorage.setItem("expense_user_role", appState.userRole);
-      localStorage.setItem("expense_trips", JSON.stringify(appState.personalTrips)); localStorage.setItem("expense_records", JSON.stringify(appState.personalExpenses));
-      if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
+      localStorage.setItem("expense_current_user", appState.currentUser); localStorage.setItem("expense_employee_id", appState.employeeId); localStorage.setItem("expense_email", appState.email); localStorage.setItem("expense_password", appState.password); localStorage.setItem("expense_user_role", appState.userRole); localStorage.setItem("expense_trips", JSON.stringify(appState.personalTrips)); localStorage.setItem("expense_records", JSON.stringify(appState.personalExpenses)); if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
     }
 
     function getTripExpenses() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      if (!trip) return [];
-      const tripEmp = (trip.employeeName || "").trim().toLowerCase();
-      const tripProj = (trip.projectName || "").trim().toLowerCase();
-      
-      return appState.expenses.filter(e => {
-        const expEmp = (e.employeeName || "").trim().toLowerCase();
-        const expProj = (e.project || "").trim().toLowerCase();
-        if (expProj !== tripProj) return false;
-        if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true;
-        return false;
-      });
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); if (!trip) return [];
+      const tripEmp = (trip.employeeName || "").trim().toLowerCase(); const tripProj = (trip.projectName || "").trim().toLowerCase();
+      return appState.expenses.filter(e => { const expEmp = (e.employeeName || "").trim().toLowerCase(); const expProj = (e.project || "").trim().toLowerCase(); if (expProj !== tripProj) return false; if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true; return false; });
+    }
+
+    // --- DASHBOARD LOGIC (WITH CHART.JS) ---
+    function renderDashboard() {
+      document.getElementById('dashUserName').innerText = appState.currentRole === 'admin' ? "Company Overview Dashboard" : `Employee Dashboard — ${appState.currentUser} (ID: ${appState.employeeId})`;
+      let totalClaimed = 0; let totalAdvance = 0; let catTotals = { "Travel": 0, "Food": 0, "Rent": 0, "Others": 0 };
+      appState.expenses.forEach(e => { let amt = parseFloat(e.amount) || 0; totalClaimed += amt; if (catTotals[e.category] !== undefined) { catTotals[e.category] += amt; } else { catTotals["Others"] += amt; } });
+      let tripsData = appState.trips.map(t => { let adv = parseFloat(t.advance) || 0; totalAdvance += adv; let spent = appState.expenses.filter(e => e.project === t.projectName && (e.employeeName === t.employeeName || appState.currentRole !== 'admin')).reduce((sum, e) => sum + (parseFloat(e.amount)||0), 0); return { name: t.projectName, emp: t.employeeName, start: t.startDate, end: t.endDate, adv: adv, spent: spent, net: adv - spent, isActive: t.id === appState.currentTripId }; });
+      document.getElementById('dashTotalClaimed').innerText = `₹${totalClaimed.toLocaleString('en-IN', {minimumFractionDigits: 2})}`; document.getElementById('dashTotalAdvance').innerText = `₹${totalAdvance.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+      const catLabels = ['Travel', 'Food', 'Rent', 'Others']; const catData = [catTotals['Travel'], catTotals['Food'], catTotals['Rent'], catTotals['Others']];
+      const ctxCat = document.getElementById('categoryChart').getContext('2d'); if (categoryChartInstance) categoryChartInstance.destroy();
+      categoryChartInstance = new Chart(ctxCat, { type: 'doughnut', data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#a855f7'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }, tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.toLocaleString('en-IN'); } } } }, cutout: '65%' } });
+      const tripLabels = tripsData.map(t => t.name.length > 15 ? t.name.substring(0, 15) + '...' : t.name); const tripData = tripsData.map(t => t.spent);
+      const ctxTrip = document.getElementById('tripChart').getContext('2d'); if (tripChartInstance) tripChartInstance.destroy();
+      tripChartInstance = new Chart(ctxTrip, { type: 'bar', data: { labels: tripLabels, datasets: [{ label: 'Total Spent (₹)', data: tripData, backgroundColor: '#3b82f6', borderRadius: 4, barPercentage: 0.6 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { borderDash: [2, 4], color: '#e2e8f0' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { return ' ₹' + context.parsed.y.toLocaleString('en-IN'); } } } } } });
+      const formatReadable = (ds) => { try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) { return String(ds).split('T')[0]; } };
+      let tbody = document.getElementById('dashTripsTbody'); tbody.innerHTML = "";
+      tripsData.sort((a,b) => new Date(b.start) - new Date(a.start)).forEach(tr => { let netText = tr.net > 0 ? `<span class="text-emerald-600">+₹${tr.net.toLocaleString('en-IN', {minimumFractionDigits: 2})}<br><span class="text-[10px]">(Return Advance)</span></span>` : tr.net < 0 ? `<span class="text-red-600">-₹${Math.abs(tr.net).toLocaleString('en-IN', {minimumFractionDigits: 2})}<br><span class="text-[10px]">(Company Owes)</span></span>` : `<span class="text-slate-600">₹0.00</span>`; let statusBadge = tr.isActive ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] font-bold border border-blue-200">Active</span>` : `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold border border-emerald-200">Settled</span>`; let row = `<tr class="border-b border-slate-100 hover:bg-slate-50 transition"><td class="p-3 py-4 text-sm font-bold text-slate-800">${tr.name}${appState.currentRole==='admin' ? `<br><span class="text-[10px] font-medium text-slate-500">${tr.emp}</span>` : ''}</td><td class="p-3 text-xs text-slate-600 whitespace-nowrap">${formatReadable(tr.start)}<br>to ${formatReadable(tr.end)}</td><td class="p-3 text-sm text-slate-800 text-right">₹${tr.adv.toLocaleString('en-IN')}</td><td class="p-3 text-sm text-slate-800 text-right">₹${tr.spent.toLocaleString('en-IN')}</td><td class="p-3 text-sm font-medium text-right">${netText}</td><td class="p-3 text-center align-middle">${statusBadge}</td></tr>`; tbody.innerHTML += row; }); if(tripsData.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-500 text-sm">No trips recorded yet.</td></tr>`;
     }
 
     // --- TRIPS ---
     function renderTripDropdown() {
       const sel = document.getElementById("tripSelect"); sel.innerHTML = "";
       if(appState.trips.length === 0) { sel.innerHTML = `<option value="">-- No Trips --</option>`; document.getElementById("tripDurationDisplay").innerText = "--"; document.getElementById("statAdvanceInput").value = 0; return; }
-      
       appState.trips.forEach(t => { 
-        const opt = document.createElement("option"); opt.value = t.id; 
-        opt.textContent = appState.currentRole === "admin" ? `${t.employeeName} - ${t.projectName}` : t.projectName;
-        if(t.id === appState.currentTripId) opt.selected=true; 
-        sel.appendChild(opt); 
+        const opt = document.createElement("option"); opt.value = t.id; opt.textContent = appState.currentRole === "admin" ? `${t.employeeName} - ${t.projectName}` : t.projectName;
+        if(t.id === appState.currentTripId) opt.selected=true; sel.appendChild(opt); 
       });
-
       const trip = appState.trips.find(t=>t.id===appState.currentTripId);
       if(trip) { 
-        const formatReadable = (ds) => {
-          try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); } 
-          catch(e) { return String(ds).split('T')[0]; }
-        };
-        document.getElementById("tripDurationDisplay").innerText = `${formatReadable(trip.startDate)} to ${formatReadable(trip.endDate)}`; 
-        document.getElementById("statAdvanceInput").value = trip.advance || 0; 
+        const formatReadable = (ds) => { try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); } catch(e) { return String(ds).split('T')[0]; } };
+        document.getElementById("tripDurationDisplay").innerText = `${formatReadable(trip.startDate)} to ${formatReadable(trip.endDate)}`; document.getElementById("statAdvanceInput").value = trip.advance || 0; 
       }
     }
     
-    function updateTripAdvance(val) { 
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
-      if (trip) { 
-        trip.advance = parseFloat(val) || 0; 
-        saveStorageData(); recalcStatsAndRender(); 
-        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: trip, oldProjectName: null }) });
-        showSuccessModal("Advance updated globally!");
-      } 
-    }
-
+    function updateTripAdvance(val) { const trip = appState.trips.find(t => t.id === appState.currentTripId); if (trip) { trip.advance = parseFloat(val) || 0; saveStorageData(); recalcStatsAndRender(); fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: trip, oldProjectName: null }) }); showSuccessModal("Advance updated globally!"); } }
     function onTripChange() { appState.currentTripId = document.getElementById("tripSelect").value; saveStorageData(); renderTripDropdown(); recalcStatsAndRender(); }
     
     function openTripModal(edit) {
       if(edit && appState.currentTripId) { 
-        const t = appState.trips.find(x=>x.id===appState.currentTripId); 
-        document.getElementById("modalProjectName").value = t.projectName; 
-        const formatInput = (ds) => {
-          try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); } 
-          catch(e) { return String(ds).split('T')[0]; }
-        };
-        document.getElementById("modalStartDate").value = formatInput(t.startDate); 
-        document.getElementById("modalEndDate").value = formatInput(t.endDate); 
-        document.getElementById("modalAdvance").value = t.advance || 0; 
-        document.getElementById("modalTripTitle").innerText = "Edit Trip Details"; 
-      } else { 
-        document.getElementById("modalProjectName").value = ""; document.getElementById("modalAdvance").value = ""; 
-        document.getElementById("modalStartDate").value = new Date().toISOString().split("T")[0]; 
-        document.getElementById("modalEndDate").value = new Date().toISOString().split("T")[0]; 
-        document.getElementById("modalTripTitle").innerText = "Create New Trip"; 
-      }
+        const t = appState.trips.find(x=>x.id===appState.currentTripId); document.getElementById("modalProjectName").value = t.projectName; 
+        const formatInput = (ds) => { try { const d = new Date(ds); if (isNaN(d)) return String(ds).split('T')[0]; return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); } catch(e) { return String(ds).split('T')[0]; } };
+        document.getElementById("modalStartDate").value = formatInput(t.startDate); document.getElementById("modalEndDate").value = formatInput(t.endDate); document.getElementById("modalAdvance").value = t.advance || 0; document.getElementById("modalTripTitle").innerText = "Edit Trip Details"; 
+      } else { document.getElementById("modalProjectName").value = ""; document.getElementById("modalAdvance").value = ""; document.getElementById("modalStartDate").value = new Date().toISOString().split("T")[0]; document.getElementById("modalEndDate").value = new Date().toISOString().split("T")[0]; document.getElementById("modalTripTitle").innerText = "Create New Trip"; }
       document.getElementById("tripModal").classList.remove("hidden"); 
     }
     function closeTripModal() { document.getElementById("tripModal").classList.add("hidden"); }
     
     function handleTripModalSubmit(e) {
-      e.preventDefault();
-      const proj = document.getElementById("modalProjectName").value.trim(), sd = document.getElementById("modalStartDate").value, ed = document.getElementById("modalEndDate").value, adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
+      e.preventDefault(); const proj = document.getElementById("modalProjectName").value.trim(), sd = document.getElementById("modalStartDate").value, ed = document.getElementById("modalEndDate").value, adv = parseFloat(document.getElementById("modalAdvance").value) || 0;
       let tripObj = null, oldName = null; const existing = appState.trips.find(t => t.id === appState.currentTripId);
-      
-      let targetEmployee = appState.currentUser;
-      if (appState.currentRole === "admin" && existing) { targetEmployee = existing.employeeName; }
-
-      if (existing && document.getElementById("modalTripTitle").innerText.includes("Edit")) {
-        oldName = existing.projectName; existing.projectName = proj; existing.startDate = sd; existing.endDate = ed; existing.advance = adv; tripObj = existing;
-        if(oldName !== proj) appState.expenses.forEach(exp => { if(exp.project === oldName) exp.project = proj; });
-      } else {
-        tripObj = { id: "trip_"+Date.now(), employeeName: targetEmployee, projectName: proj, startDate: sd, endDate: ed, advance: adv }; 
-        appState.trips.push(tripObj); appState.currentTripId = tripObj.id;
-      }
-      saveStorageData(); closeTripModal(); renderTripDropdown(); recalcStatsAndRender();
-      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
+      let targetEmployee = appState.currentUser; if (appState.currentRole === "admin" && existing) { targetEmployee = existing.employeeName; }
+      if (existing && document.getElementById("modalTripTitle").innerText.includes("Edit")) { oldName = existing.projectName; existing.projectName = proj; existing.startDate = sd; existing.endDate = ed; existing.advance = adv; tripObj = existing; if(oldName !== proj) appState.expenses.forEach(exp => { if(exp.project === oldName) exp.project = proj; }); } 
+      else { tripObj = { id: "trip_"+Date.now(), employeeName: targetEmployee, projectName: proj, startDate: sd, endDate: ed, advance: adv }; appState.trips.push(tripObj); appState.currentTripId = tripObj.id; }
+      saveStorageData(); closeTripModal(); renderTripDropdown(); recalcStatsAndRender(); fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveTrip", trip: tripObj, oldProjectName: oldName }) });
     }
 
     function deleteCurrentTrip() {
@@ -505,27 +415,66 @@
       showConfirmModal("Delete Entire Trip?", `Permanently delete "${trip.projectName}" and ALL its expenses?`, () => {
         const payload = { action: "deleteTrip", employeeName: trip.employeeName, project: trip.projectName };
         appState.trips = appState.trips.filter(t => t.id !== appState.currentTripId); appState.expenses = appState.expenses.filter(e => e.project !== trip.projectName); appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
-        saveStorageData(); renderTripDropdown(); recalcStatsAndRender();
-        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        showSuccessModal("Trip deleted successfully!");
+        saveStorageData(); renderTripDropdown(); recalcStatsAndRender(); fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); showSuccessModal("Trip deleted successfully!");
       });
     }
 
+    // --- EXPENSES (EDIT & DELETE) ---
     function deleteExpense(expId) {
       const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
       showConfirmModal("Delete Expense?", "Permanently delete this logged item? This cannot be undone.", () => {
         const payload = { action: "deleteExpense", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount };
-        appState.expenses = appState.expenses.filter(e => e.id !== expId); saveStorageData(); recalcStatsAndRender();
-        fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
-        showSuccessModal("Expense removed successfully!");
+        appState.expenses = appState.expenses.filter(e => e.id !== expId); saveStorageData(); recalcStatsAndRender(); fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); showSuccessModal("Expense removed successfully!");
       });
+    }
+
+    function editExpense(expId) {
+      const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
+      appState.editingExpenseId = exp.id;
+      
+      document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-500 mr-2"></i> Edit Expense';
+      const saveBtn = document.getElementById('btnSaveExpense');
+      saveBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Update Expense';
+      saveBtn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-amber-600 transition";
+      document.getElementById('btnCancelEdit').classList.remove('hidden');
+
+      document.getElementById('fieldDate').value = exp.date;
+      document.getElementById('fieldAmount').value = exp.amountExpr || exp.amount;
+      document.getElementById('fieldPaymentType').value = exp.paymentType;
+      document.getElementById('fieldRemarkNotes').value = exp.remarks === "N/A" ? "" : exp.remarks;
+
+      setExpenseType(exp.category);
+
+      if (exp.category === 'Travel') {
+        document.getElementById('travelOrigin').value = exp.origin !== "N/A" ? exp.origin : "";
+        document.getElementById('travelDestination').value = exp.destination !== "N/A" ? exp.destination : "";
+        document.getElementById('travelPurpose').value = exp.purpose || exp.reason || "";
+        document.getElementById('travelTransportMode').value = exp.transportMode !== "N/A" ? exp.transportMode : "Cab";
+      } else if (exp.category === 'Food') {
+        const standardReasons = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+        if (standardReasons.includes(exp.reason)) { document.getElementById('foodReasonSelect').value = exp.reason; handleFoodReasonChange(exp.reason); } 
+        else { document.getElementById('foodReasonSelect').value = "Custom"; handleFoodReasonChange("Custom"); document.getElementById('foodCustomReason').value = exp.reason; }
+      } else if (exp.category === 'Rent') {
+        let loc = exp.reason.split(" (")[0] || ""; document.getElementById('rentLocation').value = loc;
+      } else { document.getElementById('othersReason').value = exp.reason; }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEdit() {
+      appState.editingExpenseId = null;
+      document.getElementById('expenseForm').reset();
+      document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense';
+      const saveBtn = document.getElementById('btnSaveExpense');
+      saveBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database';
+      saveBtn.className = "w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-red-700 transition";
+      document.getElementById('btnCancelEdit').classList.add('hidden');
     }
 
     async function updateExpenseStatus(expId, newStatus) {
       const exp = appState.expenses.find(e => e.id === expId); if (!exp) return;
       const payload = { action: "updateStatus", employeeName: exp.employeeName, project: exp.project, date: exp.date, amount: exp.amount, status: newStatus };
-      exp.status = newStatus; saveStorageData(); recalcStatsAndRender();
-      fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }).catch(e => console.error("Failed to update status"));
+      exp.status = newStatus; saveStorageData(); recalcStatsAndRender(); fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }).catch(e => console.error("Failed to update status"));
     }
 
     function setExpenseType(t) { appState.activeCategory = t; ["Travel","Food","Rent","Others"].forEach(x => { document.getElementById(`fields${x}`).classList.toggle("hidden", x!==t); document.getElementById(`tab-${x}`).className = x===t ? "py-2 rounded-md transition shadow-sm bg-white text-red-600 font-bold" : "py-2 rounded-md transition text-slate-600 hover:text-slate-900"; }); }
@@ -537,276 +486,142 @@
     function evaluateMathAmount(expr) { if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, ""); try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } catch (e) { return parseFloat(clean) || 0; } }
 
     async function handleFormSubmit(e) {
-      e.preventDefault(); 
-      if(appState.trips.length === 0) { showSuccessModal("Please create a Trip first!"); return; }
+      e.preventDefault(); if(appState.trips.length === 0) { showSuccessModal("Please create a Trip first!"); return; }
+      const t = appState.trips.find(x=>x.id===appState.currentTripId); const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
+      let targetEmployeeName = t.employeeName; if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) { targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")"; }
       
-      const t = appState.trips.find(x=>x.id===appState.currentTripId);
-      const amtExpr = document.getElementById("fieldAmount").value.trim(), evaluatedAmt = evaluateMathAmount(amtExpr);
+      const isEditing = !!appState.editingExpenseId;
+      const oldExp = isEditing ? appState.expenses.find(x => x.id === appState.editingExpenseId) : null;
       
-      let targetEmployeeName = t.employeeName;
-      if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) { targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")"; }
-
-      let payload = { id: "exp_" + Date.now(), tripId: appState.currentTripId, action: "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
+      let payload = { id: isEditing ? oldExp.id : "exp_" + Date.now(), tripId: appState.currentTripId, action: isEditing ? "editExpense" : "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
       
       if (appState.activeCategory === "Travel") { payload.origin = document.getElementById("travelOrigin").value.trim(); payload.destination = document.getElementById("travelDestination").value.trim(); payload.transportMode = document.getElementById("travelTransportMode").value; payload.purpose = document.getElementById("travelPurpose").value.trim(); payload.reason = payload.purpose || "Travel"; } 
       else if (appState.activeCategory === "Food") { const f = document.getElementById("foodReasonSelect").value; payload.reason = f === "Custom" ? document.getElementById("foodCustomReason").value.trim() : f; } 
       else if (appState.activeCategory === "Rent") { payload.roomLocation = document.getElementById("rentLocation").value.trim(); payload.rentType = document.getElementById("rentDurationType").value; payload.roomType = document.getElementById("rentRoomType").value; payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")"; } 
       else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
-      
-      appState.expenses.push(payload); saveStorageData(); recalcStatsAndRender(); document.getElementById("expenseForm").reset(); currentCompressedBill=null; currentCompressedPay=null;
-      showSuccessModal("Saved locally! Uploading to cloud in background...");
 
+      if (isEditing) {
+        payload.oldDate = oldExp.date;
+        payload.oldAmount = oldExp.amount;
+        payload.oldProject = oldExp.project;
+        payload.billUrl = oldExp.billUrl; // Retain locally
+        payload.payUrl = oldExp.payUrl;
+        appState.expenses = appState.expenses.map(exp => exp.id === oldExp.id ? payload : exp);
+        cancelEdit();
+        showSuccessModal("Expense updated locally! Syncing...");
+      } else {
+        appState.expenses.push(payload);
+        document.getElementById("expenseForm").reset(); 
+        showSuccessModal("Saved locally! Uploading to cloud...");
+      }
+      
+      saveStorageData(); recalcStatsAndRender(); 
+      currentCompressedBill = null; currentCompressedPay = null;
+      
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) })
-        .then(r => r.json()).then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); })
-        .catch(err => console.error("Background sync failed", err));
+        .then(r => r.json()).then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); }).catch(err => console.error("Background sync failed", err));
     }
 
     function recalcStatsAndRender() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = getTripExpenses();
-      
-      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0);
-      const advance = trip ? (trip.advance || 0) : 0; const net = advance - grandTotal;
-
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = getTripExpenses();
+      const grandTotal = tripExpenses.reduce((sum, item) => sum + (item.amount || 0), 0); const advance = trip ? (trip.advance || 0) : 0; const net = advance - grandTotal;
       document.getElementById("statTotalItems").innerText = tripExpenses.length; document.getElementById("statTotalExpenses").innerText = `₹${grandTotal.toFixed(2)}`;
-      
       const netEl = document.getElementById("statNetBalance"); const netBadge = document.getElementById("netBalanceBadge"); const netIconBg = document.getElementById("netBalanceIconBg");
       if (net > 0) { netEl.className = "text-2xl font-bold text-emerald-600 mt-1"; netEl.innerText = `₹${net.toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"; netBadge.innerText = "Return to Company"; netIconBg.className = "w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"; } 
       else if (net < 0) { netEl.className = "text-2xl font-bold text-red-600 mt-1"; netEl.innerText = `₹${Math.abs(net).toFixed(2)}`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700"; netBadge.innerText = "Company Owes You"; netIconBg.className = "w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"; } 
       else { netEl.className = "text-2xl font-bold text-slate-700 mt-1"; netEl.innerText = `₹0.00`; netBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"; netBadge.innerText = "Settled"; netIconBg.className = "w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"; }
-
       renderExpenseTable(tripExpenses);
     }
 
     function renderExpenseTable(tripExpenses) {
-      const c = document.getElementById("expenseListContainer"); c.innerHTML = "";
-      const filter = document.getElementById("categoryFilter").value;
-      let items = tripExpenses;
-      if(filter !== "All") items = items.filter(e=>e.category === filter);
-      
+      const c = document.getElementById("expenseListContainer"); c.innerHTML = ""; const filter = document.getElementById("categoryFilter").value;
+      let items = tripExpenses; if(filter !== "All") items = items.filter(e=>e.category === filter);
       items.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(item => {
         const d = document.createElement("div"); d.className = "p-3 border border-slate-200 bg-slate-50 rounded-lg flex justify-between items-center";
-        
         let attIcon = ""; 
-        if (item.billUrl && item.billUrl !== "No Bill") { attIcon += `<a href="${item.billUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View Bill"><i class="fa-solid fa-file-invoice"></i></a>`; } 
-        else if (item.billImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Bill"></i>`; }
-        if (item.payUrl && item.payUrl !== "No Payment") { attIcon += `<a href="${item.payUrl}" target="_blank" class="text-emerald-500 hover:text-emerald-700 ml-2" title="View Payment"><i class="fa-solid fa-money-bill-wave"></i></a>`; } 
-        else if (item.payImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Payment"></i>`; }
-
+        if (item.billUrl && item.billUrl !== "No Bill") { attIcon += `<a href="${item.billUrl}" target="_blank" class="text-blue-500 hover:text-blue-700 ml-2" title="View Bill"><i class="fa-solid fa-file-invoice"></i></a>`; } else if (item.billImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Bill"></i>`; }
+        if (item.payUrl && item.payUrl !== "No Payment") { attIcon += `<a href="${item.payUrl}" target="_blank" class="text-emerald-500 hover:text-emerald-700 ml-2" title="View Payment"><i class="fa-solid fa-money-bill-wave"></i></a>`; } else if (item.payImage) { attIcon += `<i class="fa-solid fa-paperclip text-slate-400 ml-2" title="Has Payment"></i>`; }
         let statusColor = "bg-amber-100 text-amber-700"; let statusText = item.status || "Pending";
         if (statusText === "Approved") statusColor = "bg-emerald-100 text-emerald-700";
         if (statusText === "Rejected") statusColor = "bg-red-100 text-red-700";
         const statusBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${statusColor} ml-2">${statusText}</span>`;
-
         let adminActions = "";
-        if (appState.currentRole === "admin" && statusText === "Pending") {
-          adminActions = `
-            <div class="mt-2 flex space-x-2">
-              <button onclick="updateExpenseStatus('${item.id}', 'Approved')" class="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100 transition"><i class="fa-solid fa-check mr-1"></i>Approve</button>
-              <button onclick="updateExpenseStatus('${item.id}', 'Rejected')" class="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-xmark mr-1"></i>Reject</button>
-            </div>
-          `;
+        
+        // Add Edit pencil icon for Pending items
+        let editBtn = "";
+        if (statusText === "Pending" || statusText === "Rejected") {
+          editBtn = `<button type="button" onclick="editExpense('${item.id}')" class="text-slate-400 hover:text-amber-500 text-xs mt-1 transition mr-3" title="Edit Expense"><i class="fa-solid fa-pen"></i></button>`;
         }
 
-        d.innerHTML = `
-          <div>
-            <div class="font-bold text-sm flex items-center">${item.category} - ${item.reason} ${attIcon} ${statusBadge}</div>
-            <div class="text-[11px] text-slate-500 mt-0.5">${item.date} | ${appState.currentRole === "admin" ? item.employeeName + " | " : ""}${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>
-            ${adminActions}
-          </div>
-          <div class="text-right flex flex-col items-end">
-            <div class="font-bold text-slate-900">₹${item.amount}</div>
-            <button onclick="deleteExpense('${item.id}')" class="text-slate-400 hover:text-red-600 text-xs mt-1 transition" title="Delete Expense"><i class="fa-solid fa-trash-can"></i></button>
-          </div>
-        `; c.appendChild(d);
+        if (appState.currentRole === "admin" && statusText === "Pending") {
+          adminActions = `<div class="mt-2 flex space-x-2"><button onclick="updateExpenseStatus('${item.id}', 'Approved')" class="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100 transition"><i class="fa-solid fa-check mr-1"></i>Approve</button><button onclick="updateExpenseStatus('${item.id}', 'Rejected')" class="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-xmark mr-1"></i>Reject</button></div>`;
+        }
+        
+        d.innerHTML = `<div><div class="font-bold text-sm flex items-center">${item.category} - ${item.reason} ${attIcon} ${statusBadge}</div><div class="text-[11px] text-slate-500 mt-0.5">${item.date} | ${appState.currentRole === "admin" ? item.employeeName + " | " : ""}${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>${adminActions}</div><div class="text-right flex flex-col items-end"><div class="font-bold text-slate-900">₹${item.amount}</div><div class="flex">${editBtn}<button onclick="deleteExpense('${item.id}')" class="text-slate-400 hover:text-red-600 text-xs mt-1 transition" title="Delete Expense"><i class="fa-solid fa-trash-can"></i></button></div></div>`; c.appendChild(d);
       });
     }
 
     async function downloadOrganizedReceiptsZip() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); 
-      const tripExpenses = getTripExpenses();
-      
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = getTripExpenses();
       const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage || (e.billUrl && e.billUrl !== "No Bill") || (e.payUrl && e.payUrl !== "No Payment"));
       if (itemsWithImages.length === 0) { alert("No receipts or payment links have been logged for this trip yet!"); return; }
-
-      const btn = document.getElementById("btnZipExport");
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Fetching Images...';
-      btn.disabled = true;
-
+      const btn = document.getElementById("btnZipExport"); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Fetching Images...'; btn.disabled = true;
       const driveUrlsToFetch = [];
       itemsWithImages.forEach(item => {
-        if (item.billUrl && item.billUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.billUrl);
-        if (item.payUrl && item.payUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.payUrl);
+        if (item.billUrl && item.billUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.billUrl); if (item.payUrl && item.payUrl.includes("drive.google.com")) driveUrlsToFetch.push(item.payUrl);
       });
-
       let cloudImages = {};
       if (driveUrlsToFetch.length > 0) {
-        try {
-          const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "fetchImagesForZip", urls: driveUrlsToFetch }) });
-          const res = await r.json();
-          if (res.status === "success" && res.images) cloudImages = res.images;
-        } catch(e) { console.error("Cloud fetch failed", e); }
+        try { const r = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "fetchImagesForZip", urls: driveUrlsToFetch }) }); const res = await r.json(); if (res.status === "success" && res.images) cloudImages = res.images; } catch(e) { console.error("Cloud fetch failed", e); }
       }
-
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Zipping...';
-
-      const zip = new JSZip(); 
-      const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_");
-      const rootFolder = zip.folder(`${projClean}_Receipts`);
-      
-      const folderMap = {}; 
-      ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
-
+      const zip = new JSZip(); const projClean = (trip ? trip.projectName : "Trip").replace(/[^a-zA-Z0-9_-]/g, "_"); const rootFolder = zip.folder(`${projClean}_Receipts`);
+      const folderMap = {}; ["Travel", "Food", "Rent", "Others"].forEach(cat => { folderMap[cat] = { bills: rootFolder.folder(cat).folder("Bills"), payments: rootFolder.folder(cat).folder("Payments") }; });
       const nameCounters = {};
-
       itemsWithImages.forEach(item => {
-        const cat = item.category || "Others";
-        const rawReason = item.reason || "Expense";
-        const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
-        const baseKey = `${item.date}_${cleanReason}`;
-        
-        if (!nameCounters[baseKey]) nameCounters[baseKey] = 0; 
-        nameCounters[baseKey]++;
-        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : "";
-        const finalFileName = `${baseKey}${suffix}.jpg`;
-
-        const resolveB64 = (localB64, driveUrl) => {
-          if (localB64 && localB64.startsWith("data:image")) return localB64.split(",")[1];
-          if (driveUrl && cloudImages[driveUrl]) return cloudImages[driveUrl];
-          return null;
-        };
-
-        const billB64 = resolveB64(item.billImage, item.billUrl);
-        if (billB64) folderMap[cat].bills.file(finalFileName, billB64, { base64: true });
-
-        const payB64 = resolveB64(item.payImage, item.payUrl);
-        if (payB64) folderMap[cat].payments.file(finalFileName, payB64, { base64: true });
+        const cat = item.category || "Others"; const rawReason = item.reason || "Expense"; const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
+        const baseKey = `${item.date}_${cleanReason}`; if (!nameCounters[baseKey]) nameCounters[baseKey] = 0; nameCounters[baseKey]++;
+        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : ""; const finalFileName = `${baseKey}${suffix}.jpg`;
+        const resolveB64 = (localB64, driveUrl) => { if (localB64 && localB64.startsWith("data:image")) return localB64.split(",")[1]; if (driveUrl && cloudImages[driveUrl]) return cloudImages[driveUrl]; return null; };
+        const billB64 = resolveB64(item.billImage, item.billUrl); if (billB64) folderMap[cat].bills.file(finalFileName, billB64, { base64: true });
+        const payB64 = resolveB64(item.payImage, item.payUrl); if (payB64) folderMap[cat].payments.file(finalFileName, payB64, { base64: true });
       });
-
-      const blob = await zip.generateAsync({ type: "blob" });
-      const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
-
-      btn.innerHTML = originalText;
-      btn.disabled = false;
+      const blob = await zip.generateAsync({ type: "blob" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${projClean}_Receipts.zip`; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      btn.innerHTML = originalText; btn.disabled = false;
     }
 
-    // --- SIDE BY SIDE EXCEL EXPORT (FIXES OVERLAP BUG) ---
     function exportToStyledExcel() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId);
-      const tripExpenses = getTripExpenses();
-      const projName = trip ? trip.projectName : "Trip Expenses";
-
-      const travelItems = tripExpenses.filter(e => e.category === "Travel");
-      const foodItems = tripExpenses.filter(e => e.category === "Food");
-      const miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
-
-      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0);
-      const foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0);
-      const miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0);
-      const grandTotal = travelSum + foodSum + miscSum;
-      const advance = trip ? (trip.advance || 0) : 0;
-
-      const fontCalibri = { name: "Calibri", sz: 11 };
-      const borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
-      const styleTitle = { font: { name: "Calibri", sz: 14, bold: true }, alignment: { horizontal: "center", vertical: "center" } };
-      const styleBannerOrange = { fill: { fgColor: { rgb: "F79646" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleHeaderBlue = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: borderThin };
-      const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-      const styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
-
-      const wb = XLSX.utils.book_new();
-      const ws = {};
-      const merges = [];
-      function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
-
-      setCell(1, 0, `${projName} Expenses Report`, styleTitle);
-      merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 26 } });
-
+      const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = getTripExpenses(); const projName = trip ? trip.projectName : "Trip Expenses";
+      const travelItems = tripExpenses.filter(e => e.category === "Travel"); const foodItems = tripExpenses.filter(e => e.category === "Food"); const miscItems = tripExpenses.filter(e => e.category === "Others" || e.category === "Rent");
+      const travelSum = travelItems.reduce((acc, i) => acc + i.amount, 0); const foodSum = foodItems.reduce((acc, i) => acc + i.amount, 0); const miscSum = miscItems.reduce((acc, i) => acc + i.amount, 0); const grandTotal = travelSum + foodSum + miscSum; const advance = trip ? (trip.advance || 0) : 0;
+      const fontCalibri = { name: "Calibri", sz: 11 }; const borderThin = { top: { style: "thin", color: { rgb: "000000" } }, bottom: { style: "thin", color: { rgb: "000000" } }, left: { style: "thin", color: { rgb: "000000" } }, right: { style: "thin", color: { rgb: "000000" } } };
+      const styleTitle = { font: { name: "Calibri", sz: 14, bold: true }, alignment: { horizontal: "center", vertical: "center" } }; const styleBannerOrange = { fill: { fgColor: { rgb: "F79646" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }; const styleHeaderBlue = { fill: { fgColor: { rgb: "BDD7EE" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: borderThin }; const styleDataCell = { font: fontCalibri, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }; const styleAmountGreen = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "006100" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }; const styleTotalRed = { fill: { fgColor: { rgb: "FF0000" } }, font: { name: "Calibri", sz: 11, bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin }; const styleSummaryGold = { fill: { fgColor: { rgb: "FFC000" } }, font: { name: "Calibri", sz: 10, bold: true, color: { rgb: "000000" } }, alignment: { horizontal: "center", vertical: "center" }, border: borderThin };
+      const wb = XLSX.utils.book_new(); const ws = {}; const merges = []; function setCell(r, c, val, style) { ws[XLSX.utils.encode_cell({ r, c })] = { v: val, t: typeof val === "number" ? "n" : "s", s: style }; }
+      setCell(1, 0, `${projName} Expenses Report`, styleTitle); merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: 26 } });
       let maxRow = 3;
-
-      // 1. TRAVEL SECTION (Cols 0-8)
-      let rT = 3;
-      setCell(rT, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r: rT, c: 0 }, e: { r: rT, c: 8 } }); rT++;
-      const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks", "Status"];
-      travelHeaders.forEach((h, idx) => setCell(rT, idx, h, styleHeaderBlue)); rT++;
-      if (travelItems.length === 0) {
-        [0,1,2,3,4,5,7,8].forEach(c => setCell(rT, c, "-", styleDataCell)); setCell(rT, 6, 0, styleAmountGreen); rT++;
-      } else {
-        travelItems.forEach(item => {
-          setCell(rT, 0, item.date, styleDataCell); setCell(rT, 1, item.purpose||"-", styleDataCell); setCell(rT, 2, item.origin||"-", styleDataCell); setCell(rT, 3, item.destination||"-", styleDataCell); setCell(rT, 4, item.transportMode||"-", styleDataCell); setCell(rT, 5, item.amountExpr||item.amount, styleDataCell); setCell(rT, 6, item.amount, styleAmountGreen); setCell(rT, 7, item.remarks||item.paymentType||"-", styleDataCell); setCell(rT, 8, item.status||"Pending", styleDataCell); rT++;
-        });
-      }
-      setCell(rT, 5, "Total", styleTotalRed); setCell(rT, 6, travelSum, styleTotalRed); rT++;
-      if(rT > maxRow) maxRow = rT;
-
-      // 2. FOOD SECTION (Cols 10-15)
-      let rF = 3;
-      setCell(rF, 10, "Food Expenses", styleBannerOrange); merges.push({ s: { r: rF, c: 10 }, e: { r: rF, c: 15 } }); rF++;
-      const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total", "Status"];
-      foodHeaders.forEach((h, idx) => setCell(rF, 10 + idx, h, styleHeaderBlue)); rF++;
-      if (foodItems.length === 0) {
-        [0,1,2,3,5].forEach(c => setCell(rF, 10 + c, "-", styleDataCell)); setCell(rF, 14, 0, styleAmountGreen); rF++;
-      } else {
-        foodItems.forEach(item => {
-          setCell(rF, 10, item.date, styleDataCell); setCell(rF, 11, item.reason||"-", styleDataCell); setCell(rF, 12, item.amountExpr||item.amount, styleDataCell); setCell(rF, 13, item.remarks||item.paymentType||"-", styleDataCell); setCell(rF, 14, item.amount, styleAmountGreen); setCell(rF, 15, item.status||"Pending", styleDataCell); rF++;
-        });
-      }
-      setCell(rF, 13, "Total", styleTotalRed); setCell(rF, 14, foodSum, styleTotalRed); rF++;
-      if(rF > maxRow) maxRow = rF;
-
-      // 3. MISC/RENT SECTION (Cols 17-22)
-      let rM = 3;
-      setCell(rM, 17, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r: rM, c: 17 }, e: { r: rM, c: 22 } }); rM++;
-      foodHeaders.forEach((h, idx) => setCell(rM, 17 + idx, h, styleHeaderBlue)); rM++;
-      if (miscItems.length === 0) {
-        [0,1,2,3,5].forEach(c => setCell(rM, 17 + c, "-", styleDataCell)); setCell(rM, 21, 0, styleAmountGreen); rM++;
-      } else {
-        miscItems.forEach(item => {
-          setCell(rM, 17, item.date, styleDataCell); setCell(rM, 18, item.reason||"-", styleDataCell); setCell(rM, 19, item.amountExpr||item.amount, styleDataCell); setCell(rM, 20, item.remarks||item.paymentType||"-", styleDataCell); setCell(rM, 21, item.amount, styleAmountGreen); setCell(rM, 22, item.status||"Pending", styleDataCell); rM++;
-        });
-      }
-      setCell(rM, 20, "Total", styleTotalRed); setCell(rM, 21, miscSum, styleTotalRed); rM++;
-      if(rM > maxRow) maxRow = rM;
-
-      // 4. SUMMARY / TOTALIZER SECTION (Cols 24-26)
-      let rS = 3;
-      setCell(rS, 24, "S.No", styleHeaderBlue); setCell(rS, 25, "Advance", styleHeaderBlue); setCell(rS, 26, "Amounts", styleHeaderBlue); rS++;
+      let rT = 3; setCell(rT, 0, "Travel Expenses", styleBannerOrange); merges.push({ s: { r: rT, c: 0 }, e: { r: rT, c: 8 } }); rT++; const travelHeaders = ["Date of Travel", "Purpose of Trip", "Origin", "Destination", "Mode of Transport", "Amount", "Total Amount", "Remarks", "Status"]; travelHeaders.forEach((h, idx) => setCell(rT, idx, h, styleHeaderBlue)); rT++;
+      if (travelItems.length === 0) { [0,1,2,3,4,5,7,8].forEach(c => setCell(rT, c, "-", styleDataCell)); setCell(rT, 6, 0, styleAmountGreen); rT++; } else { travelItems.forEach(item => { setCell(rT, 0, item.date, styleDataCell); setCell(rT, 1, item.purpose||"-", styleDataCell); setCell(rT, 2, item.origin||"-", styleDataCell); setCell(rT, 3, item.destination||"-", styleDataCell); setCell(rT, 4, item.transportMode||"-", styleDataCell); setCell(rT, 5, item.amountExpr||item.amount, styleDataCell); setCell(rT, 6, item.amount, styleAmountGreen); setCell(rT, 7, item.remarks||item.paymentType||"-", styleDataCell); setCell(rT, 8, item.status||"Pending", styleDataCell); rT++; }); }
+      setCell(rT, 5, "Total", styleTotalRed); setCell(rT, 6, travelSum, styleTotalRed); rT++; if(rT > maxRow) maxRow = rT;
+      let rF = 3; setCell(rF, 10, "Food Expenses", styleBannerOrange); merges.push({ s: { r: rF, c: 10 }, e: { r: rF, c: 15 } }); rF++; const foodHeaders = ["DATE", "Reason", "Amount", "Remark", "Total", "Status"]; foodHeaders.forEach((h, idx) => setCell(rF, 10 + idx, h, styleHeaderBlue)); rF++;
+      if (foodItems.length === 0) { [0,1,2,3,5].forEach(c => setCell(rF, 10 + c, "-", styleDataCell)); setCell(rF, 14, 0, styleAmountGreen); rF++; } else { foodItems.forEach(item => { setCell(rF, 10, item.date, styleDataCell); setCell(rF, 11, item.reason||"-", styleDataCell); setCell(rF, 12, item.amountExpr||item.amount, styleDataCell); setCell(rF, 13, item.remarks||item.paymentType||"-", styleDataCell); setCell(rF, 14, item.amount, styleAmountGreen); setCell(rF, 15, item.status||"Pending", styleDataCell); rF++; }); }
+      setCell(rF, 13, "Total", styleTotalRed); setCell(rF, 14, foodSum, styleTotalRed); rF++; if(rF > maxRow) maxRow = rF;
+      let rM = 3; setCell(rM, 17, "Miscellaneous & Rent Expenses", styleBannerOrange); merges.push({ s: { r: rM, c: 17 }, e: { r: rM, c: 22 } }); rM++; foodHeaders.forEach((h, idx) => setCell(rM, 17 + idx, h, styleHeaderBlue)); rM++;
+      if (miscItems.length === 0) { [0,1,2,3,5].forEach(c => setCell(rM, 17 + c, "-", styleDataCell)); setCell(rM, 21, 0, styleAmountGreen); rM++; } else { miscItems.forEach(item => { setCell(rM, 17, item.date, styleDataCell); setCell(rM, 18, item.reason||"-", styleDataCell); setCell(rM, 19, item.amountExpr||item.amount, styleDataCell); setCell(rM, 20, item.remarks||item.paymentType||"-", styleDataCell); setCell(rM, 21, item.amount, styleAmountGreen); setCell(rM, 22, item.status||"Pending", styleDataCell); rM++; }); }
+      setCell(rM, 20, "Total", styleTotalRed); setCell(rM, 21, miscSum, styleTotalRed); rM++; if(rM > maxRow) maxRow = rM;
+      let rS = 3; setCell(rS, 24, "S.No", styleHeaderBlue); setCell(rS, 25, "Advance", styleHeaderBlue); setCell(rS, 26, "Amounts", styleHeaderBlue); rS++;
       setCell(rS, 24, 1, styleSummaryGold); setCell(rS, 25, trip ? trip.employeeName : appState.currentUser, styleSummaryGold); setCell(rS, 26, advance, styleAmountGreen); rS += 2;
-
       setCell(rS, 24, "S.No", styleHeaderBlue); setCell(rS, 25, "Remark", styleHeaderBlue); setCell(rS, 26, "Amounts", styleHeaderBlue); rS++;
       setCell(rS, 24, 1, styleSummaryGold); setCell(rS, 25, "Travel Expenses", styleSummaryGold); setCell(rS, 26, travelSum, styleAmountGreen); rS++;
       setCell(rS, 24, 2, styleSummaryGold); setCell(rS, 25, "Food Expenses", styleSummaryGold); setCell(rS, 26, foodSum, styleAmountGreen); rS++;
       setCell(rS, 24, 3, styleSummaryGold); setCell(rS, 25, "Miscellaneous Expenses", styleSummaryGold); setCell(rS, 26, miscSum, styleAmountGreen); rS++;
-      setCell(rS, 24, "", styleTotalRed); setCell(rS, 25, "Total", styleTotalRed); setCell(rS, 26, grandTotal, styleTotalRed); rS++;
-      if(rS > maxRow) maxRow = rS;
-
-      ws["!cols"] = [
-        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, // Travel (0-8)
-        { wch: 4 }, // Spacer 9
-        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, // Food (10-15)
-        { wch: 4 }, // Spacer 16
-        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, // Misc (17-22)
-        { wch: 4 }, // Spacer 23
-        { wch: 8 }, { wch: 22 }, { wch: 14 } // Summary (24-26)
-      ];
-
-      ws["!merges"] = merges;
-      ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxRow + 2, c: 26 } });
-      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report");
-      XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
+      setCell(rS, 24, "", styleTotalRed); setCell(rS, 25, "Total", styleTotalRed); setCell(rS, 26, grandTotal, styleTotalRed); rS++; if(rS > maxRow) maxRow = rS;
+      ws["!cols"] = [{ wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 4 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 4 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 4 }, { wch: 8 }, { wch: 22 }, { wch: 14 } ];
+      ws["!merges"] = merges; ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxRow + 2, c: 26 } });
+      XLSX.utils.book_append_sheet(wb, ws, "Expenses Report"); XLSX.writeFile(wb, `${(projName || "Expense_Report").replace(/[^a-zA-Z0-9_-]/g, "_")}.xlsx`);
     }
+
     // --- PWA SERVICE WORKER REGISTRATION ---
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('App ready for mobile install.'))
-          .catch(err => console.error('Service worker failed.', err));
-      });
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').then(reg => console.log('App ready for mobile install.')).catch(err => console.error('Service worker failed.', err)); }); }
   </script>
 </body>
 </html>
