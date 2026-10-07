@@ -288,7 +288,7 @@
             document.getElementById("authForm").reset();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 400."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+      } catch (err) { alert("Network Error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
     async function switchRole(role) {
