@@ -36,7 +36,7 @@
       <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div id="nameFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Display Name <span class="text-red-500">*</span></label><input type="text" id="authName" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
         <div><label id="authIdLabel" class="block text-xs font-bold text-slate-700 mb-1">Employee ID or Email <span class="text-red-500">*</span></label><input type="text" id="authId" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
-        <div id="emailFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Email Address <span class="text-red-500">*</span></label><input type="email" id="authEmail" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
+        <div id="emailFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Company Email Address <span class="text-red-500">*</span></label><input type="email" id="authEmail" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" placeholder="e.g. name@tynatech.in" /></div>
         <div><label class="block text-xs font-bold text-slate-700 mb-1">Password <span class="text-red-500">*</span></label><input type="password" id="authPassword" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
         <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition mt-2">Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i></button>
       </form>
@@ -215,6 +215,20 @@
   <div id="profileModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="font-bold text-lg mb-4">Edit Profile</h3><form onsubmit="handleProfileSubmit(event)" class="space-y-4"><input type="text" id="modalProfileName" class="w-full p-2 border rounded text-sm" placeholder="Display Name" /><input type="text" id="modalProfileId" class="w-full p-2 border rounded text-sm" placeholder="Employee ID" /><input type="email" id="modalProfileEmail" class="w-full p-2 border rounded text-sm" placeholder="Email" /><input type="text" id="modalProfilePassword" class="w-full p-2 border rounded text-sm" placeholder="Password" /><button type="submit" id="btnUpdateProfile" class="w-full bg-red-600 text-white p-2 rounded font-bold">Save</button><button type="button" onclick="closeProfileModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
   <div id="tripModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="modalTripTitle" class="font-bold text-lg mb-4">Trip Details</h3><form onsubmit="handleTripModalSubmit(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-700">Project Name</label><input type="text" id="modalProjectName" required class="w-full p-2 border rounded" /></div><div class="flex gap-2"><div class="w-1/2"><label class="text-xs font-bold text-slate-700">Start Date</label><input type="date" id="modalStartDate" required class="w-full p-2 border rounded text-sm" /></div><div class="w-1/2"><label class="text-xs font-bold text-slate-700">End Date</label><input type="date" id="modalEndDate" required class="w-full p-2 border rounded text-sm" /></div></div><div><label class="text-xs font-bold text-slate-700">Initial Advance (₹)</label><input type="number" id="modalAdvance" placeholder="0" class="w-full p-2 border rounded" /></div><button type="submit" id="btnSaveTrip" class="w-full bg-red-600 text-white font-bold p-2 rounded">Save Trip</button><button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
 
+  <!-- OTP MODAL -->
+  <div id="otpModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
+    <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
+      <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-envelope-open-text"></i></div>
+      <h3 class="font-bold text-xl text-slate-900 mb-2">Verify your Email</h3>
+      <p class="text-sm text-slate-500 mb-6">We sent a 6-digit code to <span id="otpDisplayEmail" class="font-bold text-slate-800"></span></p>
+      <form onsubmit="handleOtpSubmit(event)" class="space-y-4">
+        <input type="text" id="otpInput" maxlength="6" required placeholder="123456" class="w-full text-center text-2xl tracking-widest font-mono p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500" />
+        <button type="submit" id="btnVerifyOtp" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow hover:bg-blue-700 transition">Verify & Register</button>
+        <button type="button" onclick="closeOtpModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <!-- ========================================== -->
   <!-- JAVASCRIPT APP LOGIC -->
   <!-- ========================================== -->
@@ -222,7 +236,7 @@
     // -------------------------------------------------------------
     // PASTE YOUR LATEST GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwLykH1baQ2fCISjwhE-IeRrP5sCulq7yLDWPGfx03y4Dq5tz-b2XEuMg5ftCdeZtQpA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSR4CZPxx4gZF2FwOfPSzLN4fbIjvZWLGdyHbHXa-FAVXZcvhSv_utfxPZsFAbyUiflw/exec";
 
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
@@ -231,6 +245,7 @@
     };
     let sessionTimeoutTracker; let authMode = "login"; 
     let categoryChartInstance = null; let tripChartInstance = null;
+    let pendingRegistrationData = null; 
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0];
@@ -258,25 +273,45 @@
 
     function toggleAuthMode() {
       authMode = authMode === "login" ? "register" : "login";
-      document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login"); document.getElementById("emailFieldGroup").classList.toggle("hidden", authMode === "login");
-      document.getElementById("authName").required = authMode === "register"; document.getElementById("authEmail").required = authMode === "register";
+      document.getElementById("nameFieldGroup").classList.toggle("hidden", authMode === "login"); 
+      document.getElementById("emailFieldGroup").classList.toggle("hidden", authMode === "login");
+      document.getElementById("authName").required = authMode === "register"; 
+      document.getElementById("authEmail").required = authMode === "register";
       document.getElementById("authIdLabel").innerHTML = authMode === "login" ? 'Employee ID or Email <span class="text-red-500">*</span>' : 'Employee ID <span class="text-red-500">*</span>';
-      document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account"; document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
-      document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Register Account <i class="fa-solid fa-user-plus ml-2"></i>';
+      document.getElementById("authTitle").innerText = authMode === "login" ? "Company Portal" : "Create Account"; 
+      document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
+      document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Verify & Register <i class="fa-solid fa-user-plus ml-2"></i>';
       document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
     }
 
     async function handleAuthSubmit(e) {
       e.preventDefault();
-      const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...'; btn.disabled = true;
+      const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML; 
+      
+      // FRONTEND DOMAIN RESTRICTION CHECK
+      if (authMode === "register") {
+        const checkEmail = document.getElementById("authEmail").value.trim().toLowerCase();
+        if (!checkEmail.endsWith("@tynatech.in") && !checkEmail.endsWith("@iotyn.in") && !checkEmail.endsWith("@tynaraace.in")) {
+          alert("Registration restricted: You must use an official @tynatech.in, @iotyn.in, or @tynaraace.in email address.");
+          return;
+        }
+      }
+
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
       const payload = { action: authMode, name: document.getElementById("authName").value.trim(), empId: document.getElementById("authId").value.trim(), email: document.getElementById("authEmail").value.trim(), password: document.getElementById("authPassword").value.trim() };
-      if (authMode === "login") payload.loginId = document.getElementById("authId").value.trim();
+      
+      if (authMode === "login") { payload.loginId = document.getElementById("authId").value.trim(); } 
+      else { payload.action = "sendOTP"; }
+
       try {
         const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
         const result = await response.json();
+        
         if (result.status === "success") {
-          if (authMode === "register") { showSuccessModal("Account created! Please log in."); toggleAuthMode(); document.getElementById("authId").value = payload.empId; document.getElementById("authPassword").value = ""; } 
-          else {
+          if (authMode === "register") { 
+            pendingRegistrationData = payload; document.getElementById("otpDisplayEmail").innerText = payload.email;
+            document.getElementById("otpInput").value = ""; document.getElementById("otpModal").classList.remove("hidden");
+          } else {
             appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password;
             appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
             if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; appState.currentRole = "admin"; } else { document.getElementById("adminControlsContainer").style.display = "none"; appState.currentRole = "employee"; }
@@ -288,8 +323,22 @@
             document.getElementById("authForm").reset();
           }
         } else alert(result.message);
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 414."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+    }
+
+    async function handleOtpSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btnVerifyOtp"); const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...'; btn.disabled = true;
+      const finalPayload = { ...pendingRegistrationData, action: "register", otp: document.getElementById("otpInput").value.trim() };
+      try {
+        const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(finalPayload) });
+        const result = await response.json();
+        if (result.status === "success") { closeOtpModal(); showSuccessModal("Account created successfully!"); toggleAuthMode(); document.getElementById("authId").value = finalPayload.empId; document.getElementById("authPassword").value = ""; } 
+        else { alert(result.message); }
       } catch (err) { alert("Network Error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
+    
+    function closeOtpModal() { document.getElementById("otpModal").classList.add("hidden"); }
 
     async function switchRole(role) {
       appState.currentRole = role; const empBtn = document.getElementById("roleEmployeeBtn"); const admBtn = document.getElementById("roleAdminBtn");
@@ -449,21 +498,7 @@
 
     let currentCompressedBill = null, currentCompressedPay = null;
     function compressImageToJpeg(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); let w=i.width, h=i.height; if(w>1280||h>1280){if(w>h){h=Math.round((h*1280)/w);w=1280;}else{w=Math.round((w*1280)/h);h=1280;}} c.width=w; c.height=h; c.getContext("2d").drawImage(i,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72)); }; }; }); }
-    
-    // UPDATED: Now dynamically processes PDFs as raw Base64 and images via compression
-    async function previewImageFile(input, type) { 
-      if(input.files && input.files[0]) { 
-        const file = input.files[0];
-        let b64 = null;
-        if(file.type.startsWith('image/')) {
-          b64 = await compressImageToJpeg(file); 
-        } else {
-          b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); });
-        }
-        if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; 
-      } 
-    }
-    
+    async function previewImageFile(input, type) { if(input.files && input.files[0]) { const file = input.files[0]; let b64 = null; if(file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; } }
     function evaluateMathAmount(expr) { if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, ""); try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } catch (e) { return parseFloat(clean) || 0; } }
 
     async function handleFormSubmit(e) {
@@ -502,15 +537,12 @@
         if (statusText === "Approved") statusColor = "bg-emerald-100 text-emerald-700";
         if (statusText === "Rejected") statusColor = "bg-red-100 text-red-700";
         const statusBadge = `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${statusColor} ml-2">${statusText}</span>`;
-        
         let editBtn = ""; if (statusText === "Pending" || statusText === "Rejected") { editBtn = `<button type="button" onclick="editExpense('${item.id}')" class="text-slate-400 hover:text-amber-500 text-xs mt-1 transition mr-3" title="Edit Expense"><i class="fa-solid fa-pen"></i></button>`; }
         let adminActions = ""; if (appState.currentRole === "admin" && statusText === "Pending") { adminActions = `<div class="mt-2 flex space-x-2"><button onclick="updateExpenseStatus('${item.id}', 'Approved')" class="text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100 transition"><i class="fa-solid fa-check mr-1"></i>Approve</button><button onclick="updateExpenseStatus('${item.id}', 'Rejected')" class="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2 py-1 rounded hover:bg-red-100 transition"><i class="fa-solid fa-xmark mr-1"></i>Reject</button></div>`; }
-        
         d.innerHTML = `<div><div class="font-bold text-sm flex items-center">${item.category} - ${item.reason} ${attIcon} ${statusBadge}</div><div class="text-[11px] text-slate-500 mt-0.5">${item.date} | ${appState.currentRole === "admin" ? item.employeeName + " | " : ""}${item.paymentType} ${item.remarks ? `(${item.remarks})` : ""}</div>${adminActions}</div><div class="text-right flex flex-col items-end"><div class="font-bold text-slate-900">₹${item.amount}</div><div class="flex">${editBtn}<button onclick="deleteExpense('${item.id}')" class="text-slate-400 hover:text-red-600 text-xs mt-1 transition" title="Delete Expense"><i class="fa-solid fa-trash-can"></i></button></div></div>`; c.appendChild(d);
       });
     }
 
-    // UPDATED: Now dynamically detects PDF or JPG for ZIP extraction based on Base64 magic headers
     async function downloadOrganizedReceiptsZip() {
       const trip = appState.trips.find(t => t.id === appState.currentTripId); const tripExpenses = getTripExpenses();
       const itemsWithImages = tripExpenses.filter(e => e.billImage || e.payImage || (e.billUrl && e.billUrl !== "No Bill") || (e.payUrl && e.payUrl !== "No Payment"));
@@ -531,16 +563,10 @@
       itemsWithImages.forEach(item => {
         const cat = item.category || "Others"; const rawReason = item.reason || "Expense"; const cleanReason = rawReason.replace(/[^a-zA-Z0-9_-]/g, "_").substring(0, 20);
         const baseKey = `${item.date}_${cleanReason}`; if (!nameCounters[baseKey]) nameCounters[baseKey] = 0; nameCounters[baseKey]++;
-        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : ""; 
-        const finalFileBaseName = `${baseKey}${suffix}`;
-        
+        const suffix = nameCounters[baseKey] > 1 ? `_${nameCounters[baseKey]}` : ""; const finalFileBaseName = `${baseKey}${suffix}`;
         const resolveB64AndExt = (localB64, driveUrl) => { 
-          let b64Data = null;
-          if (localB64 && localB64.startsWith("data:")) b64Data = localB64.split(",")[1]; 
-          else if (driveUrl && cloudImages[driveUrl]) b64Data = cloudImages[driveUrl]; 
-          if(!b64Data) return null;
-          let ext = ".jpg"; if(b64Data.startsWith("JVBER")) ext = ".pdf"; else if (b64Data.startsWith("iVBORw")) ext = ".png";
-          return { b64: b64Data, ext: ext }; 
+          let b64Data = null; if (localB64 && localB64.startsWith("data:")) b64Data = localB64.split(",")[1]; else if (driveUrl && cloudImages[driveUrl]) b64Data = cloudImages[driveUrl]; 
+          if(!b64Data) return null; let ext = ".jpg"; if(b64Data.startsWith("JVBER")) ext = ".pdf"; else if (b64Data.startsWith("iVBORw")) ext = ".png"; return { b64: b64Data, ext: ext }; 
         };
         const billObj = resolveB64AndExt(item.billImage, item.billUrl); if (billObj) folderMap[cat].bills.file(finalFileBaseName + billObj.ext, billObj.b64, { base64: true });
         const payObj = resolveB64AndExt(item.payImage, item.payUrl); if (payObj) folderMap[cat].payments.file(finalFileBaseName + payObj.ext, payObj.b64, { base64: true });
