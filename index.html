@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Portal</title>
+  <title>Enterprise Expense & Travel Portal</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E42528">
   <meta name="mobile-web-app-capable" content="yes">
@@ -30,15 +30,15 @@
   <div id="authScreen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-8 shadow-2xl">
       <div class="flex justify-center mb-4"><div class="w-16 h-16 zoho-red rounded-2xl flex items-center justify-center text-white shadow-lg font-bold text-3xl"><i class="fa-solid fa-receipt"></i></div></div>
-      <h2 id="authTitle" class="text-2xl font-bold text-center text-slate-900 mb-1">Expense Portal</h2>
+      <h2 id="authTitle" class="text-2xl font-bold text-center text-slate-900 mb-1">Company Portal</h2>
       <p id="authSubtitle" class="text-center text-sm text-slate-500 mb-6">Sign in to manage your expenses</p>
       
       <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
-        <div id="nameFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Name <span class="text-red-500">*</span></label><input type="text" id="authName" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
+        <div id="nameFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Display Name <span class="text-red-500">*</span></label><input type="text" id="authName" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
         <div><label id="authIdLabel" class="block text-xs font-bold text-slate-700 mb-1">Employee ID or Email <span class="text-red-500">*</span></label><input type="text" id="authId" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
-        <div id="emailFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Email ID <span class="text-red-500">*</span></label><input type="email" id="authEmail" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" placeholder="Enter your official Email ID" /></div>
+        <div id="emailFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Company Email Address <span class="text-red-500">*</span></label><input type="email" id="authEmail" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" placeholder="e.g. name@tynatech.in" /></div>
         <div><label class="block text-xs font-bold text-slate-700 mb-1">Password <span class="text-red-500">*</span></label><input type="password" id="authPassword" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
-        <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition mt-2">Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i></button>
+        <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition mt-2">Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i></button>
       </form>
       <div class="mt-6 text-center border-t border-slate-100 pt-4"><button onclick="toggleAuthMode()" id="authToggleBtn" class="text-sm font-semibold text-slate-600 hover:text-red-600 transition">New employee? Create an account</button></div>
     </div>
@@ -50,7 +50,7 @@
   <div id="mainApp" class="hidden flex-col min-h-screen w-full">
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense Portal</h1><p class="text-xs text-slate-400"></p></div></div>
+        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
         <div class="flex items-center space-x-3">
           
           <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
@@ -64,8 +64,8 @@
       </div>
       <!-- TOP NAVIGATION TABS -->
       <div id="topNavBar" class="bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6">
-        <button id="tabLogBtn" onclick="switchMainTab('log')" class="py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition"><i class="fa-solid fa-pen-to-square mr-2"></i> Log Your Expense</button>
-        <button id="tabDashBtn" onclick="switchMainTab('dash')" class="py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition"><i class="fa-solid fa-chart-simple mr-2"></i> Your Dashboard</button>
+        <button id="tabLogBtn" onclick="switchMainTab('log')" class="py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition"><i class="fa-solid fa-pen-to-square mr-2"></i> Log Expense</button>
+        <button id="tabDashBtn" onclick="switchMainTab('dash')" class="py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition"><i class="fa-solid fa-chart-simple mr-2"></i> Employee Dashboard</button>
       </div>
     </header>
 
@@ -100,7 +100,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p><h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3></div><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div></div>
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p><h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3></div><div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-indian-rupee-sign"></i></div></div>
-          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none hover:bg-slate-50 rounded px-1 transition" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
+          <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div class="w-full mr-2"><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Advance</p><div class="flex items-center mt-1"><span class="text-lg font-bold text-emerald-600 mr-1">₹</span><input type="number" id="statAdvanceInput" onchange="updateTripAdvance(this.value)" class="w-full text-xl font-bold text-emerald-600 bg-transparent border-b border-dashed focus:outline-none hover:bg-slate-50 rounded px-1 transition" value="0" /></div></div><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-hand-holding-dollar"></i></div></div>
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p><h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3><span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span></div><div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-scale-balanced"></i></div></div>
         </div>
 
@@ -131,16 +131,16 @@
                 <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Bike</option><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option><option>Rapido</option><option>Uber</option></select>
+                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
               </div>
               <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Brunch ">Brunch </option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
+                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
                 <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
               </div>
               <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
                 <input type="text" id="rentLocation" placeholder="Location *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per week</option><option>Per Month</option></select>
-                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Room</option><option>Guest House</option><option>PG</option><option>Resort</option></select>
+                <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per Month</option></select>
+                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
               </div>
               <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
                 <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
@@ -149,16 +149,37 @@
               <div class="border-t border-slate-200 pt-4 mt-4">
                 <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Optional if editing)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div class="bg-red-50/50 border border-red-100 rounded-lg p-3 hover:bg-red-50 transition relative">
-                    <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-camera text-red-500 mr-1.5"></i>Paper Bill / PDF</label>
-                    <p class="text-[9px] text-slate-500 mb-2 leading-tight">Cam, Gallery, or PDF document</p>
-                    <input type="file" id="fileBill" accept="image/*,application/pdf" onchange="previewImageFile(this, 'fileBill')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-red-100 file:text-red-700 hover:file:bg-red-200" />
+                  
+                  <!-- Paper Bill -->
+                  <div class="bg-red-50/50 border border-red-100 rounded-lg p-3">
+                    <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-receipt text-red-500 mr-1.5"></i>Paper Bill</label>
+                    <div class="flex space-x-2">
+                      <label id="btn-fileBill-img" class="flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition">
+                        <i class="fa-solid fa-camera mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Photo</span>
+                        <input type="file" accept="image/*" onchange="previewImageFile(this, 'fileBill', 'img')" class="hidden" />
+                      </label>
+                      <label id="btn-fileBill-pdf" class="flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition">
+                        <i class="fa-solid fa-file-pdf mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">PDF</span>
+                        <input type="file" accept="application/pdf" onchange="previewImageFile(this, 'fileBill', 'pdf')" class="hidden" />
+                      </label>
+                    </div>
                   </div>
-                  <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3 hover:bg-blue-50 transition relative">
-                    <label class="block text-[11px] font-bold text-slate-800 mb-1"><i class="fa-solid fa-image text-blue-500 mr-1.5"></i>Payment Screenshot</label>
-                    <p class="text-[9px] text-slate-500 mb-2 leading-tight">UPI / Bank App receipt</p>
-                    <input type="file" id="filePayment" accept="image/*,application/pdf" onchange="previewImageFile(this, 'filePayment')" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+
+                  <!-- Payment Proof -->
+                  <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
+                    <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-money-bill-transfer text-blue-500 mr-1.5"></i>Payment Proof</label>
+                    <div class="flex space-x-2">
+                      <label id="btn-filePayment-img" class="flex-1 cursor-pointer bg-white border border-blue-200 text-blue-600 rounded py-2 text-center shadow-sm hover:bg-blue-50 transition">
+                        <i class="fa-solid fa-image mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Gallery</span>
+                        <input type="file" accept="image/*" onchange="previewImageFile(this, 'filePayment', 'img')" class="hidden" />
+                      </label>
+                      <label id="btn-filePayment-pdf" class="flex-1 cursor-pointer bg-white border border-blue-200 text-blue-600 rounded py-2 text-center shadow-sm hover:bg-blue-50 transition">
+                        <i class="fa-solid fa-file-pdf mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">PDF</span>
+                        <input type="file" accept="application/pdf" onchange="previewImageFile(this, 'filePayment', 'pdf')" class="hidden" />
+                      </label>
+                    </div>
                   </div>
+
                 </div>
               </div>
 
@@ -288,7 +309,6 @@
       e.preventDefault();
       const btn = document.getElementById("authSubmitBtn"); const originalHtml = btn.innerHTML; 
       
-      // FRONTEND DOMAIN RESTRICTION CHECK
       if (authMode === "register") {
         const checkEmail = document.getElementById("authEmail").value.trim().toLowerCase();
         if (!checkEmail.endsWith("@tynatech.in") && !checkEmail.endsWith("@iotyn.in") && !checkEmail.endsWith("@tynaraace.in")) {
@@ -320,7 +340,7 @@
             appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
             localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000)); saveStorageData(); 
             if(appState.userRole === "Admin") { showMainApp(); await fetchAllCompanyData(); } else { showMainApp(); }
-            document.getElementById("authForm").reset();
+            document.getElementById("authForm").reset(); resetAttachmentUI();
           }
         } else alert(result.message);
       } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 414."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
@@ -477,11 +497,12 @@
       else if (exp.category === 'Food') { const standardReasons = ["Breakfast", "Lunch", "Dinner", "Snacks"]; if (standardReasons.includes(exp.reason)) { document.getElementById('foodReasonSelect').value = exp.reason; handleFoodReasonChange(exp.reason); } else { document.getElementById('foodReasonSelect').value = "Custom"; handleFoodReasonChange("Custom"); document.getElementById('foodCustomReason').value = exp.reason; } } 
       else if (exp.category === 'Rent') { let loc = exp.reason.split(" (")[0] || ""; document.getElementById('rentLocation').value = loc; } 
       else { document.getElementById('othersReason').value = exp.reason; }
+      resetAttachmentUI();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
-      appState.editingExpenseId = null; document.getElementById('expenseForm').reset();
+      appState.editingExpenseId = null; document.getElementById('expenseForm').reset(); resetAttachmentUI(); currentCompressedBill = null; currentCompressedPay = null;
       document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense';
       const saveBtn = document.getElementById('btnSaveExpense'); saveBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Database'; saveBtn.className = "w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 shadow hover:bg-red-700 transition";
       document.getElementById('btnCancelEdit').classList.add('hidden');
@@ -498,7 +519,40 @@
 
     let currentCompressedBill = null, currentCompressedPay = null;
     function compressImageToJpeg(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); let w=i.width, h=i.height; if(w>1280||h>1280){if(w>h){h=Math.round((h*1280)/w);w=1280;}else{w=Math.round((w*1280)/h);h=1280;}} c.width=w; c.height=h; c.getContext("2d").drawImage(i,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72)); }; }; }); }
-    async function previewImageFile(input, type) { if(input.files && input.files[0]) { const file = input.files[0]; let b64 = null; if(file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; } }
+    
+    // --- UPDATED PREVIEW LOGIC FOR SUCCESS UI ---
+    async function previewImageFile(input, type, subType) { 
+      if(input.files && input.files[0]) { 
+        const file = input.files[0]; let b64 = null; 
+        if(file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } 
+        else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } 
+        if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; 
+        
+        const groupColor = type === 'fileBill' ? 'red' : 'blue';
+        document.getElementById(`btn-${type}-img`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
+        document.getElementById(`btn-${type}-pdf`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
+        document.getElementById(`btn-${type}-img`).innerHTML = `<i class="fa-solid ${type==='fileBill'?'fa-camera':'fa-image'} mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">${type==='fileBill'?'Photo':'Gallery'}</span><input type="file" accept="image/*" onchange="previewImageFile(this, '${type}', 'img')" class="hidden" />`;
+        document.getElementById(`btn-${type}-pdf`).innerHTML = `<i class="fa-solid fa-file-pdf mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">PDF</span><input type="file" accept="application/pdf" onchange="previewImageFile(this, '${type}', 'pdf')" class="hidden" />`;
+        
+        const activeBtn = document.getElementById(`btn-${type}-${subType}`);
+        activeBtn.className = "flex-1 cursor-pointer bg-emerald-500 border border-emerald-600 text-white rounded py-2 text-center shadow-sm transition";
+        activeBtn.innerHTML = `<i class="fa-solid fa-circle-check mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Attached</span><input type="file" accept="${subType==='img'?'image/*':'application/pdf'}" onchange="previewImageFile(this, '${type}', '${subType}')" class="hidden" />`;
+      } 
+    }
+
+    function resetAttachmentUI() {
+      if(!document.getElementById('btn-fileBill-img')) return;
+      document.getElementById('btn-fileBill-img').className = "flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition";
+      document.getElementById('btn-fileBill-pdf').className = "flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition";
+      document.getElementById('btn-fileBill-img').innerHTML = `<i class="fa-solid fa-camera mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Photo</span><input type="file" accept="image/*" onchange="previewImageFile(this, 'fileBill', 'img')" class="hidden" />`;
+      document.getElementById('btn-fileBill-pdf').innerHTML = `<i class="fa-solid fa-file-pdf mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">PDF</span><input type="file" accept="application/pdf" onchange="previewImageFile(this, 'fileBill', 'pdf')" class="hidden" />`;
+      
+      document.getElementById('btn-filePayment-img').className = "flex-1 cursor-pointer bg-white border border-blue-200 text-blue-600 rounded py-2 text-center shadow-sm hover:bg-blue-50 transition";
+      document.getElementById('btn-filePayment-pdf').className = "flex-1 cursor-pointer bg-white border border-blue-200 text-blue-600 rounded py-2 text-center shadow-sm hover:bg-blue-50 transition";
+      document.getElementById('btn-filePayment-img').innerHTML = `<i class="fa-solid fa-image mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Gallery</span><input type="file" accept="image/*" onchange="previewImageFile(this, 'filePayment', 'img')" class="hidden" />`;
+      document.getElementById('btn-filePayment-pdf').innerHTML = `<i class="fa-solid fa-file-pdf mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">PDF</span><input type="file" accept="application/pdf" onchange="previewImageFile(this, 'filePayment', 'pdf')" class="hidden" />`;
+    }
+
     function evaluateMathAmount(expr) { if (!expr) return 0; const clean = expr.toString().replace(/[^0-9+\-*/.]/g, ""); try { const result = Function('"use strict";return (' + clean + ")")(); return isNaN(result) ? 0 : parseFloat(result); } catch (e) { return parseFloat(clean) || 0; } }
 
     async function handleFormSubmit(e) {
@@ -509,7 +563,7 @@
       let payload = { id: isEditing ? oldExp.id : "exp_" + Date.now(), tripId: appState.currentTripId, action: isEditing ? "editExpense" : "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
       if (appState.activeCategory === "Travel") { payload.origin = document.getElementById("travelOrigin").value.trim(); payload.destination = document.getElementById("travelDestination").value.trim(); payload.transportMode = document.getElementById("travelTransportMode").value; payload.purpose = document.getElementById("travelPurpose").value.trim(); payload.reason = payload.purpose || "Travel"; } else if (appState.activeCategory === "Food") { const f = document.getElementById("foodReasonSelect").value; payload.reason = f === "Custom" ? document.getElementById("foodCustomReason").value.trim() : f; } else if (appState.activeCategory === "Rent") { payload.roomLocation = document.getElementById("rentLocation").value.trim(); payload.rentType = document.getElementById("rentDurationType").value; payload.roomType = document.getElementById("rentRoomType").value; payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")"; } else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
       if (isEditing) { payload.oldDate = oldExp.date; payload.oldAmount = oldExp.amount; payload.oldProject = oldExp.project; payload.billUrl = oldExp.billUrl; payload.payUrl = oldExp.payUrl; appState.expenses = appState.expenses.map(exp => exp.id === oldExp.id ? payload : exp); cancelEdit(); showSuccessModal("Expense updated locally! Syncing..."); } 
-      else { appState.expenses.push(payload); document.getElementById("expenseForm").reset(); showSuccessModal("Saved locally! Uploading to cloud..."); }
+      else { appState.expenses.push(payload); document.getElementById("expenseForm").reset(); resetAttachmentUI(); showSuccessModal("Saved locally! Uploading to cloud..."); }
       saveStorageData(); recalcStatsAndRender(); currentCompressedBill = null; currentCompressedPay = null;
       fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }).then(r => r.json()).then(res => { if(res.status !== "success") console.error("Cloud Error: ", res.message); }).catch(err => console.error("Background sync failed", err));
     }
