@@ -37,7 +37,13 @@
         <div id="nameFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Display Name <span class="text-red-500">*</span></label><input type="text" id="authName" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
         <div><label id="authIdLabel" class="block text-xs font-bold text-slate-700 mb-1">Employee ID or Email <span class="text-red-500">*</span></label><input type="text" id="authId" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
         <div id="emailFieldGroup" class="hidden"><label class="block text-xs font-bold text-slate-700 mb-1">Company Email Address <span class="text-red-500">*</span></label><input type="email" id="authEmail" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" placeholder="e.g. name@tynatech.in" /></div>
-        <div><label class="block text-xs font-bold text-slate-700 mb-1">Password <span class="text-red-500">*</span></label><input type="password" id="authPassword" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" /></div>
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-slate-700">Password <span class="text-red-500">*</span></label>
+            <button type="button" id="forgotPasswordBtn" onclick="openForgotPasswordModal()" class="text-[10px] font-bold text-slate-500 hover:text-red-600 transition">Forgot Password?</button>
+          </div>
+          <input type="password" id="authPassword" required class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
+        </div>
         <button type="submit" id="authSubmitBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-md transition mt-2">Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i></button>
       </form>
       <div class="mt-6 text-center border-t border-slate-100 pt-4"><button onclick="toggleAuthMode()" id="authToggleBtn" class="text-sm font-semibold text-slate-600 hover:text-red-600 transition">New employee? Create an account</button></div>
@@ -52,17 +58,11 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
         <div class="flex items-center space-x-3">
-          
-          <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs">
-            <button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button>
-            <button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button>
-          </div>
-
+          <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs"><button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button><button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button></div>
           <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><i class="fa-solid fa-circle-user text-red-400"></i><span id="navEmployeeName" class="text-xs font-semibold text-slate-200 truncate max-w-[120px]">User</span><button onclick="openProfileModal()" class="text-slate-400 hover:text-white text-xs ml-1"><i class="fa-solid fa-pen"></i></button></div>
           <button onclick="logout()" class="bg-slate-800 hover:bg-red-600 border border-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg transition text-xs font-bold flex items-center"><i class="fa-solid fa-right-from-bracket sm:mr-1"></i> <span class="hidden sm:inline">Sign Out</span></button>
         </div>
       </div>
-      <!-- TOP NAVIGATION TABS -->
       <div id="topNavBar" class="bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6">
         <button id="tabLogBtn" onclick="switchMainTab('log')" class="py-2.5 text-sm font-medium border-b-2 border-red-500 text-white flex items-center transition"><i class="fa-solid fa-pen-to-square mr-2"></i> Log Expense</button>
         <button id="tabDashBtn" onclick="switchMainTab('dash')" class="py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-white flex items-center transition"><i class="fa-solid fa-chart-simple mr-2"></i> Employee Dashboard</button>
@@ -70,12 +70,7 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
-      
-      <!-- ========================================== -->
-      <!-- VIEW: LOG EXPENSE -->
-      <!-- ========================================== -->
       <div id="viewLog">
-        <!-- TRIP SELECTOR -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
           <div class="flex flex-wrap items-center gap-4">
             <div>
@@ -96,7 +91,6 @@
           </div>
         </div>
 
-        <!-- SUMMARY CARDS -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Items</p><h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3></div><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-list-check"></i></div></div>
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p><h3 id="statTotalExpenses" class="text-2xl font-bold text-red-600 mt-1">₹0.00</h3></div><div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-indian-rupee-sign"></i></div></div>
@@ -104,7 +98,6 @@
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center justify-between"><div><p id="netBalanceLabel" class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Net Balance</p><h3 id="statNetBalance" class="text-2xl font-bold text-slate-800 mt-1">₹0.00</h3><span id="netBalanceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Settled</span></div><div id="netBalanceIconBg" class="w-12 h-12 bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-scale-balanced"></i></div></div>
         </div>
 
-        <!-- MAIN INPUT GRID -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm p-5">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4"><h2 id="formTitle" class="font-bold text-base text-slate-900 flex items-center"><i class="fa-solid fa-circle-plus text-red-600 mr-2"></i> Log New Expense</h2></div>
@@ -131,17 +124,23 @@
                 <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
+                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Rapido</option><option>Uber</option><option>Metro</option><option>Cab</option><option>Auto</option><option>Bus</option><option>Train</option><option>Flight</option></select>
               </div>
               <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
+                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Brunch">Brunch</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
                 <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
               </div>
+              
+              <!-- UPDATED RENT UI FOR MULTI-DAY STAYS -->
               <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
                 <input type="text" id="rentLocation" placeholder="Location *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="rentDurationType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Per Day</option><option>Per Month</option></select>
-                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
+                <div class="flex space-x-2">
+                  <input type="number" id="rentDurationCount" placeholder="No. of Days" min="1" class="w-1/2 text-xs p-2 rounded border border-slate-300" />
+                  <select id="rentDurationType" class="w-1/2 text-xs p-2 rounded border border-slate-300 bg-white"><option value="Days">Days</option><option value="Months">Months</option></select>
+                </div>
+                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option><option>Apartment</option><option>Rented House</option></select>
               </div>
+
               <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
                 <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
               </div>
@@ -149,8 +148,6 @@
               <div class="border-t border-slate-200 pt-4 mt-4">
                 <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Optional if editing)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  
-                  <!-- Paper Bill -->
                   <div class="bg-red-50/50 border border-red-100 rounded-lg p-3">
                     <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-receipt text-red-500 mr-1.5"></i>Paper Bill</label>
                     <div class="flex space-x-2">
@@ -164,8 +161,6 @@
                       </label>
                     </div>
                   </div>
-
-                  <!-- Payment Proof -->
                   <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
                     <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-money-bill-transfer text-blue-500 mr-1.5"></i>Payment Proof</label>
                     <div class="flex space-x-2">
@@ -179,7 +174,6 @@
                       </label>
                     </div>
                   </div>
-
                 </div>
               </div>
 
@@ -202,9 +196,6 @@
         </div>
       </div>
 
-      <!-- ========================================== -->
-      <!-- VIEW: EMPLOYEE DASHBOARD -->
-      <!-- ========================================== -->
       <div id="viewDash" class="hidden space-y-6">
         <div class="flex items-center justify-between pb-2">
           <h2 class="text-2xl font-bold text-slate-900" id="dashUserName">Employee Dashboard</h2>
@@ -236,7 +227,7 @@
   <div id="profileModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-sm"><h3 class="font-bold text-lg mb-4">Edit Profile</h3><form onsubmit="handleProfileSubmit(event)" class="space-y-4"><input type="text" id="modalProfileName" class="w-full p-2 border rounded text-sm" placeholder="Display Name" /><input type="text" id="modalProfileId" class="w-full p-2 border rounded text-sm" placeholder="Employee ID" /><input type="email" id="modalProfileEmail" class="w-full p-2 border rounded text-sm" placeholder="Email" /><input type="text" id="modalProfilePassword" class="w-full p-2 border rounded text-sm" placeholder="Password" /><button type="submit" id="btnUpdateProfile" class="w-full bg-red-600 text-white p-2 rounded font-bold">Save</button><button type="button" onclick="closeProfileModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
   <div id="tripModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-50"><div class="bg-white p-6 rounded-xl w-full max-w-md"><h3 id="modalTripTitle" class="font-bold text-lg mb-4">Trip Details</h3><form onsubmit="handleTripModalSubmit(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-700">Project Name</label><input type="text" id="modalProjectName" required class="w-full p-2 border rounded" /></div><div class="flex gap-2"><div class="w-1/2"><label class="text-xs font-bold text-slate-700">Start Date</label><input type="date" id="modalStartDate" required class="w-full p-2 border rounded text-sm" /></div><div class="w-1/2"><label class="text-xs font-bold text-slate-700">End Date</label><input type="date" id="modalEndDate" required class="w-full p-2 border rounded text-sm" /></div></div><div><label class="text-xs font-bold text-slate-700">Initial Advance (₹)</label><input type="number" id="modalAdvance" placeholder="0" class="w-full p-2 border rounded" /></div><button type="submit" id="btnSaveTrip" class="w-full bg-red-600 text-white font-bold p-2 rounded">Save Trip</button><button type="button" onclick="closeTripModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded">Cancel</button></form></div></div>
 
-  <!-- OTP MODAL -->
+  <!-- OTP REGISTRATION MODAL -->
   <div id="otpModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
     <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl text-center">
       <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-envelope-open-text"></i></div>
@@ -250,6 +241,30 @@
     </div>
   </div>
 
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgotPasswordModal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center p-4 z-[150] transition-opacity">
+    <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl">
+      <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-unlock-keyhole"></i></div>
+      <h3 class="font-bold text-xl text-center text-slate-900 mb-2">Reset Password</h3>
+      
+      <form id="fpRequestForm" onsubmit="handleFpRequest(event)" class="space-y-4">
+        <p class="text-sm text-center text-slate-500 mb-4">Enter your Employee ID or Email to receive a reset code.</p>
+        <input type="text" id="fpLoginId" required placeholder="Employee ID or Email" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-red-500" />
+        <button type="submit" id="btnFpRequest" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg shadow hover:bg-red-700 transition">Send Reset Code</button>
+        <button type="button" onclick="closeForgotPasswordModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded text-sm">Cancel</button>
+      </form>
+      
+      <form id="fpResetForm" onsubmit="handleFpReset(event)" class="space-y-4 hidden">
+        <p class="text-sm text-center text-slate-500 mb-4">Code sent to <span id="fpDisplayEmail" class="font-bold block text-slate-800 mt-1"></span></p>
+        <input type="text" id="fpOtpInput" maxlength="6" required placeholder="6-Digit OTP" class="w-full text-center text-xl tracking-widest font-mono p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500" />
+        <input type="password" id="fpNewPassword" required placeholder="New Password" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500" />
+        <input type="password" id="fpConfirmPassword" required placeholder="Confirm New Password" class="w-full text-sm p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500" />
+        <button type="submit" id="btnFpReset" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg shadow hover:bg-emerald-700 transition">Update Password</button>
+        <button type="button" onclick="closeForgotPasswordModal()" class="w-full p-2 text-slate-500 font-medium hover:bg-slate-100 rounded text-sm">Cancel</button>
+      </form>
+    </div>
+  </div>
+
   <!-- ========================================== -->
   <!-- JAVASCRIPT APP LOGIC -->
   <!-- ========================================== -->
@@ -257,7 +272,7 @@
     // -------------------------------------------------------------
     // PASTE YOUR LATEST GOOGLE APPS SCRIPT URL HERE
     // -------------------------------------------------------------
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxSR4CZPxx4gZF2FwOfPSzLN4fbIjvZWLGdyHbHXa-FAVXZcvhSv_utfxPZsFAbyUiflw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQWVUSQ5eFXNEHzdwwBur1QCNetWKPXFHnU4eY4VUXpwNhf8SiWRD_9SA2NDzoE_s6Pw/exec";
 
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
@@ -266,12 +281,9 @@
     };
     let sessionTimeoutTracker; let authMode = "login"; 
     let categoryChartInstance = null; let tripChartInstance = null;
-    let pendingRegistrationData = null; 
+    let pendingRegistrationData = null; let fpTargetEmail = ""; 
 
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0];
-      checkSession();
-    });
+    document.addEventListener("DOMContentLoaded", () => { document.getElementById("fieldDate").value = new Date().toISOString().split("T")[0]; checkSession(); });
 
     function switchMainTab(tabName) {
       if(tabName === 'log') {
@@ -290,7 +302,7 @@
     function showConfirmModal(title, message, callback) { document.getElementById("confirmTitle").innerText = title; document.getElementById("confirmMessage").innerText = message; confirmActionCallback = callback; document.getElementById("confirmModal").classList.remove("hidden"); }
     function closeConfirmModal() { document.getElementById("confirmModal").classList.add("hidden"); confirmActionCallback = null; }
     function executeConfirm() { if(confirmActionCallback) confirmActionCallback(); closeConfirmModal(); }
-    function showSuccessModal(msg) { const m = document.getElementById("successModal"); document.getElementById("successMessage").innerText = msg; m.classList.remove("hidden"); setTimeout(() => m.classList.add("hidden"), 3000); }
+    function showSuccessModal(msg) { const m = document.getElementById("successModal"); document.getElementById("successMessage").innerText = msg; m.classList.remove("hidden"); setTimeout(() => m.classList.add("hidden"), 3500); }
 
     function toggleAuthMode() {
       authMode = authMode === "login" ? "register" : "login";
@@ -303,6 +315,7 @@
       document.getElementById("authSubtitle").innerText = authMode === "login" ? "Sign in to manage your expenses" : "Register as a new employee";
       document.getElementById("authSubmitBtn").innerHTML = authMode === "login" ? 'Secure Login <i class="fa-solid fa-arrow-right-to-bracket ml-2"></i>' : 'Verify & Register <i class="fa-solid fa-user-plus ml-2"></i>';
       document.getElementById("authToggleBtn").innerText = authMode === "login" ? "New employee? Create an account" : "Already have an account? Sign In";
+      document.getElementById("forgotPasswordBtn").classList.toggle("hidden", authMode === "register");
     }
 
     async function handleAuthSubmit(e) {
@@ -311,17 +324,12 @@
       
       if (authMode === "register") {
         const checkEmail = document.getElementById("authEmail").value.trim().toLowerCase();
-        if (!checkEmail.endsWith("@tynatech.in") && !checkEmail.endsWith("@iotyn.in") && !checkEmail.endsWith("@tynaraace.in")) {
-          alert("Registration restricted: You must use an official @tynatech.in, @iotyn.in, or @tynaraace.in email address.");
-          return;
-        }
+        if (!checkEmail.endsWith("@tynatech.in") && !checkEmail.endsWith("@iotyn.in") && !checkEmail.endsWith("@tynaraace.in")) { alert("Registration restricted: You must use an official @tynatech.in, @iotyn.in, or @tynaraace.in email address."); return; }
       }
 
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
       const payload = { action: authMode, name: document.getElementById("authName").value.trim(), empId: document.getElementById("authId").value.trim(), email: document.getElementById("authEmail").value.trim(), password: document.getElementById("authPassword").value.trim() };
-      
-      if (authMode === "login") { payload.loginId = document.getElementById("authId").value.trim(); } 
-      else { payload.action = "sendOTP"; }
+      if (authMode === "login") { payload.loginId = document.getElementById("authId").value.trim(); } else { payload.action = "sendOTP"; }
 
       try {
         const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
@@ -332,33 +340,51 @@
             pendingRegistrationData = payload; document.getElementById("otpDisplayEmail").innerText = payload.email;
             document.getElementById("otpInput").value = ""; document.getElementById("otpModal").classList.remove("hidden");
           } else {
-            appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password;
-            appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
+            appState.currentUser = result.user.name; appState.employeeId = result.user.empId; appState.email = result.user.email; appState.password = result.user.password; appState.userRole = result.user.role ? String(result.user.role).trim() : "Employee";
             if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; appState.currentRole = "admin"; } else { document.getElementById("adminControlsContainer").style.display = "none"; appState.currentRole = "employee"; }
-            appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : []; appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : [];
-            appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
-            appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
+            appState.personalTrips = result.trips && result.trips.length > 0 ? result.trips : []; appState.personalExpenses = result.expenses && result.expenses.length > 0 ? result.expenses : []; appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; appState.currentTripId = appState.trips.length > 0 ? appState.trips[0].id : null;
             localStorage.setItem("expense_session_expiry", Date.now() + (60 * 60 * 1000)); saveStorageData(); 
             if(appState.userRole === "Admin") { showMainApp(); await fetchAllCompanyData(); } else { showMainApp(); }
             document.getElementById("authForm").reset(); resetAttachmentUI();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 414."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 458."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
     async function handleOtpSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById("btnVerifyOtp"); const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...'; btn.disabled = true;
+      e.preventDefault(); const btn = document.getElementById("btnVerifyOtp"); const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...'; btn.disabled = true;
       const finalPayload = { ...pendingRegistrationData, action: "register", otp: document.getElementById("otpInput").value.trim() };
       try {
         const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(finalPayload) });
         const result = await response.json();
-        if (result.status === "success") { closeOtpModal(); showSuccessModal("Account created successfully!"); toggleAuthMode(); document.getElementById("authId").value = finalPayload.empId; document.getElementById("authPassword").value = ""; } 
-        else { alert(result.message); }
+        if (result.status === "success") { closeOtpModal(); showSuccessModal("Account created successfully!"); toggleAuthMode(); document.getElementById("authId").value = finalPayload.empId; document.getElementById("authPassword").value = ""; } else { alert(result.message); }
       } catch (err) { alert("Network Error"); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
-    
     function closeOtpModal() { document.getElementById("otpModal").classList.add("hidden"); }
+
+    function openForgotPasswordModal() { document.getElementById("fpRequestForm").classList.remove("hidden"); document.getElementById("fpResetForm").classList.add("hidden"); document.getElementById("fpLoginId").value = ""; document.getElementById("forgotPasswordModal").classList.remove("hidden"); }
+    function closeForgotPasswordModal() { document.getElementById("forgotPasswordModal").classList.add("hidden"); }
+
+    async function handleFpRequest(e) {
+      e.preventDefault(); const btn = document.getElementById("btnFpRequest"); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...'; btn.disabled = true;
+      const payload = { action: "sendForgotPasswordOTP", loginId: document.getElementById("fpLoginId").value.trim() };
+      try {
+        const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        if (result.status === "success") { fpTargetEmail = result.email; document.getElementById("fpDisplayEmail").innerText = fpTargetEmail; document.getElementById("fpRequestForm").classList.add("hidden"); document.getElementById("fpResetForm").classList.remove("hidden"); document.getElementById("fpOtpInput").value = ""; document.getElementById("fpNewPassword").value = ""; document.getElementById("fpConfirmPassword").value = ""; } else { alert(result.message); }
+      } catch(err) { alert("Network Error"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+    }
+
+    async function handleFpReset(e) {
+      e.preventDefault(); const p1 = document.getElementById("fpNewPassword").value; const p2 = document.getElementById("fpConfirmPassword").value; if (p1 !== p2) { alert("Passwords do not match!"); return; }
+      const btn = document.getElementById("btnFpReset"); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...'; btn.disabled = true;
+      const payload = { action: "resetPassword", email: fpTargetEmail, otp: document.getElementById("fpOtpInput").value.trim(), newPassword: p1 };
+      try {
+        const response = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        if (result.status === "success") { closeForgotPasswordModal(); showSuccessModal("Password reset successfully! You can now login."); document.getElementById("authPassword").value = ""; } else { alert(result.message); }
+      } catch(err) { alert("Network Error"); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+    }
 
     async function switchRole(role) {
       appState.currentRole = role; const empBtn = document.getElementById("roleEmployeeBtn"); const admBtn = document.getElementById("roleAdminBtn");
@@ -373,11 +399,7 @@
 
     async function refreshCloudData() {
       const btn = document.getElementById("btnRefreshSync"); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-      try {
-        if (appState.currentRole === "admin") { await fetchAllCompanyData(); } 
-        else { const res = await (await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "login", loginId: appState.employeeId, password: appState.password }) })).json(); if(res.status === "success") { appState.personalTrips = res.trips || []; appState.personalExpenses = res.expenses || []; appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; } renderTripDropdown(); recalcStatsAndRender(); saveStorageData(); if(!document.getElementById('viewDash').classList.contains('hidden')) renderDashboard(); }
-        showSuccessModal("Cloud data synced successfully!");
-      } catch(e) { alert("Sync failed."); } finally { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>'; }
+      try { if (appState.currentRole === "admin") { await fetchAllCompanyData(); } else { const res = await (await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "login", loginId: appState.employeeId, password: appState.password }) })).json(); if(res.status === "success") { appState.personalTrips = res.trips || []; appState.personalExpenses = res.expenses || []; appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; } renderTripDropdown(); recalcStatsAndRender(); saveStorageData(); if(!document.getElementById('viewDash').classList.contains('hidden')) renderDashboard(); } showSuccessModal("Cloud data synced successfully!"); } catch(e) { alert("Sync failed."); } finally { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>'; }
     }
 
     function checkSession() { const exp = localStorage.getItem("expense_session_expiry"); if (exp && Date.now() < parseInt(exp)) { loadStorageData(); showMainApp(); resetSessionTimer(); } else logout(false); }
@@ -390,12 +412,7 @@
       document.getElementById("navEmployeeName").innerText = appState.currentUser;
       if(appState.trips.length === 0 && appState.currentRole !== 'admin') { appState.trips.push({ id: "trip_1", employeeName: appState.currentUser, projectName: "Default Trip", startDate: "2026-01-01", endDate: "2026-01-01", advance: 0 }); appState.currentTripId = "trip_1"; saveStorageData(); }
       if(appState.userRole === "Admin") { document.getElementById("adminControlsContainer").style.display = "flex"; } else { document.getElementById("adminControlsContainer").style.display = "none"; }
-      
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-        document.getElementById('tabDashBtn').classList.add('hidden');
-        document.getElementById('topNavBar').className = "bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6 pb-2";
-        switchMainTab('log');
-      }
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) { document.getElementById('tabDashBtn').classList.add('hidden'); document.getElementById('topNavBar').className = "bg-slate-900 border-t border-slate-800 px-4 sm:px-6 flex space-x-6 pb-2"; switchMainTab('log'); }
       renderTripDropdown(); recalcStatsAndRender();
     }
 
@@ -403,23 +420,9 @@
     function closeProfileModal() { document.getElementById("profileModal").classList.add("hidden"); }
     async function handleProfileSubmit(e) { e.preventDefault(); const btn = document.getElementById("btnUpdateProfile"); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true; const payload = { action: "updateProfile", oldEmpId: appState.employeeId, name: document.getElementById("modalProfileName").value.trim(), empId: document.getElementById("modalProfileId").value.trim(), email: document.getElementById("modalProfileEmail").value.trim(), password: document.getElementById("modalProfilePassword").value.trim() }; try { const r = await fetch(SCRIPT_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) }); const res = await r.json(); if (res.status === "success") { appState.currentUser = payload.name; appState.employeeId = payload.empId; appState.email = payload.email; appState.password = payload.password; document.getElementById("navEmployeeName").innerText = payload.name; saveStorageData(); closeProfileModal(); showSuccessModal("Profile updated!"); } } catch (err) { alert("Network Error"); } finally { btn.innerHTML = "Save"; btn.disabled = false; } }
 
-    function loadStorageData() {
-      appState.currentUser = localStorage.getItem("expense_current_user"); appState.employeeId = localStorage.getItem("expense_employee_id"); appState.email = localStorage.getItem("expense_email"); appState.password = localStorage.getItem("expense_password"); appState.userRole = localStorage.getItem("expense_user_role") || "Employee";
-      try { appState.personalTrips = JSON.parse(localStorage.getItem("expense_trips")) || []; } catch(e){}
-      try { appState.personalExpenses = JSON.parse(localStorage.getItem("expense_records")) || []; } catch(e){}
-      appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses];
-      appState.currentTripId = localStorage.getItem("expense_active_trip_id") || (appState.trips.length > 0 ? appState.trips[0].id : null);
-    }
-    function saveStorageData() {
-      if(appState.currentRole === "employee") { appState.personalTrips = [...appState.trips]; appState.personalExpenses = [...appState.expenses]; }
-      localStorage.setItem("expense_current_user", appState.currentUser); localStorage.setItem("expense_employee_id", appState.employeeId); localStorage.setItem("expense_email", appState.email); localStorage.setItem("expense_password", appState.password); localStorage.setItem("expense_user_role", appState.userRole); localStorage.setItem("expense_trips", JSON.stringify(appState.personalTrips)); localStorage.setItem("expense_records", JSON.stringify(appState.personalExpenses)); if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId);
-    }
-
-    function getTripExpenses() {
-      const trip = appState.trips.find(t => t.id === appState.currentTripId); if (!trip) return [];
-      const tripEmp = (trip.employeeName || "").trim().toLowerCase(); const tripProj = (trip.projectName || "").trim().toLowerCase();
-      return appState.expenses.filter(e => { const expEmp = (e.employeeName || "").trim().toLowerCase(); const expProj = (e.project || "").trim().toLowerCase(); if (expProj !== tripProj) return false; if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true; return false; });
-    }
+    function loadStorageData() { appState.currentUser = localStorage.getItem("expense_current_user"); appState.employeeId = localStorage.getItem("expense_employee_id"); appState.email = localStorage.getItem("expense_email"); appState.password = localStorage.getItem("expense_password"); appState.userRole = localStorage.getItem("expense_user_role") || "Employee"; try { appState.personalTrips = JSON.parse(localStorage.getItem("expense_trips")) || []; } catch(e){} try { appState.personalExpenses = JSON.parse(localStorage.getItem("expense_records")) || []; } catch(e){} appState.trips = [...appState.personalTrips]; appState.expenses = [...appState.personalExpenses]; appState.currentTripId = localStorage.getItem("expense_active_trip_id") || (appState.trips.length > 0 ? appState.trips[0].id : null); }
+    function saveStorageData() { if(appState.currentRole === "employee") { appState.personalTrips = [...appState.trips]; appState.personalExpenses = [...appState.expenses]; } localStorage.setItem("expense_current_user", appState.currentUser); localStorage.setItem("expense_employee_id", appState.employeeId); localStorage.setItem("expense_email", appState.email); localStorage.setItem("expense_password", appState.password); localStorage.setItem("expense_user_role", appState.userRole); localStorage.setItem("expense_trips", JSON.stringify(appState.personalTrips)); localStorage.setItem("expense_records", JSON.stringify(appState.personalExpenses)); if (appState.currentTripId) localStorage.setItem("expense_active_trip_id", appState.currentTripId); }
+    function getTripExpenses() { const trip = appState.trips.find(t => t.id === appState.currentTripId); if (!trip) return []; const tripEmp = (trip.employeeName || "").trim().toLowerCase(); const tripProj = (trip.projectName || "").trim().toLowerCase(); return appState.expenses.filter(e => { const expEmp = (e.employeeName || "").trim().toLowerCase(); const expProj = (e.project || "").trim().toLowerCase(); if (expProj !== tripProj) return false; if (expEmp === tripEmp || expEmp.includes(tripEmp)) return true; return false; }); }
 
     function renderDashboard() {
       document.getElementById('dashUserName').innerText = appState.currentRole === 'admin' ? "Company Overview Dashboard" : `Employee Dashboard — ${appState.currentUser} (ID: ${appState.employeeId})`;
@@ -495,10 +498,22 @@
       setExpenseType(exp.category);
       if (exp.category === 'Travel') { document.getElementById('travelOrigin').value = exp.origin !== "N/A" ? exp.origin : ""; document.getElementById('travelDestination').value = exp.destination !== "N/A" ? exp.destination : ""; document.getElementById('travelPurpose').value = exp.purpose || exp.reason || ""; document.getElementById('travelTransportMode').value = exp.transportMode !== "N/A" ? exp.transportMode : "Cab"; } 
       else if (exp.category === 'Food') { const standardReasons = ["Breakfast", "Lunch", "Dinner", "Snacks"]; if (standardReasons.includes(exp.reason)) { document.getElementById('foodReasonSelect').value = exp.reason; handleFoodReasonChange(exp.reason); } else { document.getElementById('foodReasonSelect').value = "Custom"; handleFoodReasonChange("Custom"); document.getElementById('foodCustomReason').value = exp.reason; } } 
-      else if (exp.category === 'Rent') { let loc = exp.reason.split(" (")[0] || ""; document.getElementById('rentLocation').value = loc; } 
+      else if (exp.category === 'Rent') { 
+        let loc = exp.reason.split(" (")[0] || ""; document.getElementById('rentLocation').value = loc; 
+        let bracketContent = exp.reason.match(/\(([^)]+)\)/);
+        if(bracketContent && bracketContent[1]) {
+          let parts = bracketContent[1].split(" - ");
+          if(parts.length > 0) document.getElementById('rentRoomType').value = parts[0];
+          if(parts.length > 1) {
+             let durationStr = parts[1];
+             if (durationStr.includes("Per Day")) { document.getElementById('rentDurationCount').value = "1"; document.getElementById('rentDurationType').value = "Days"; } 
+             else if (durationStr.includes("Per Month")) { document.getElementById('rentDurationCount').value = "1"; document.getElementById('rentDurationType').value = "Months"; } 
+             else { let valParts = durationStr.split(" "); document.getElementById('rentDurationCount').value = valParts[0] || "1"; document.getElementById('rentDurationType').value = valParts[1] || "Days"; }
+          }
+        }
+      } 
       else { document.getElementById('othersReason').value = exp.reason; }
-      resetAttachmentUI();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      resetAttachmentUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelEdit() {
@@ -520,7 +535,6 @@
     let currentCompressedBill = null, currentCompressedPay = null;
     function compressImageToJpeg(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); let w=i.width, h=i.height; if(w>1280||h>1280){if(w>h){h=Math.round((h*1280)/w);w=1280;}else{w=Math.round((w*1280)/h);h=1280;}} c.width=w; c.height=h; c.getContext("2d").drawImage(i,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72)); }; }; }); }
     
-    // --- UPDATED PREVIEW LOGIC FOR SUCCESS UI ---
     async function previewImageFile(input, type, subType) { 
       if(input.files && input.files[0]) { 
         const file = input.files[0]; let b64 = null; 
@@ -561,7 +575,15 @@
       let targetEmployeeName = t.employeeName; if (appState.currentRole !== "admin" && !targetEmployeeName.includes("(")) { targetEmployeeName = appState.currentUser + " (" + appState.employeeId + ")"; }
       const isEditing = !!appState.editingExpenseId; const oldExp = isEditing ? appState.expenses.find(x => x.id === appState.editingExpenseId) : null;
       let payload = { id: isEditing ? oldExp.id : "exp_" + Date.now(), tripId: appState.currentTripId, action: isEditing ? "editExpense" : "addExpense", employeeName: targetEmployeeName, project: t.projectName, category: appState.activeCategory, date: document.getElementById("fieldDate").value, amount: evaluatedAmt, amountExpr: amtExpr, paymentType: document.getElementById("fieldPaymentType").value, remarks: document.getElementById("fieldRemarkNotes").value.trim(), billImage: currentCompressedBill, payImage: currentCompressedPay, status: "Pending" };
-      if (appState.activeCategory === "Travel") { payload.origin = document.getElementById("travelOrigin").value.trim(); payload.destination = document.getElementById("travelDestination").value.trim(); payload.transportMode = document.getElementById("travelTransportMode").value; payload.purpose = document.getElementById("travelPurpose").value.trim(); payload.reason = payload.purpose || "Travel"; } else if (appState.activeCategory === "Food") { const f = document.getElementById("foodReasonSelect").value; payload.reason = f === "Custom" ? document.getElementById("foodCustomReason").value.trim() : f; } else if (appState.activeCategory === "Rent") { payload.roomLocation = document.getElementById("rentLocation").value.trim(); payload.rentType = document.getElementById("rentDurationType").value; payload.roomType = document.getElementById("rentRoomType").value; payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentType + ")"; } else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
+      if (appState.activeCategory === "Travel") { payload.origin = document.getElementById("travelOrigin").value.trim(); payload.destination = document.getElementById("travelDestination").value.trim(); payload.transportMode = document.getElementById("travelTransportMode").value; payload.purpose = document.getElementById("travelPurpose").value.trim(); payload.reason = payload.purpose || "Travel"; } else if (appState.activeCategory === "Food") { const f = document.getElementById("foodReasonSelect").value; payload.reason = f === "Custom" ? document.getElementById("foodCustomReason").value.trim() : f; } 
+      else if (appState.activeCategory === "Rent") { 
+        payload.roomLocation = document.getElementById("rentLocation").value.trim(); 
+        payload.rentDurationCount = document.getElementById("rentDurationCount").value || "1"; 
+        payload.rentType = document.getElementById("rentDurationType").value; 
+        payload.roomType = document.getElementById("rentRoomType").value; 
+        payload.reason = payload.roomLocation + " (" + payload.roomType + " - " + payload.rentDurationCount + " " + payload.rentType + ")"; 
+      } 
+      else { payload.reason = document.getElementById("othersReason").value.trim() || "Expense"; }
       if (isEditing) { payload.oldDate = oldExp.date; payload.oldAmount = oldExp.amount; payload.oldProject = oldExp.project; payload.billUrl = oldExp.billUrl; payload.payUrl = oldExp.payUrl; appState.expenses = appState.expenses.map(exp => exp.id === oldExp.id ? payload : exp); cancelEdit(); showSuccessModal("Expense updated locally! Syncing..."); } 
       else { appState.expenses.push(payload); document.getElementById("expenseForm").reset(); resetAttachmentUI(); showSuccessModal("Saved locally! Uploading to cloud..."); }
       saveStorageData(); recalcStatsAndRender(); currentCompressedBill = null; currentCompressedPay = null;
