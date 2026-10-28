@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enterprise Expense & Travel Portal</title>
+  <title>Expense Portal</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#E42528">
   <meta name="mobile-web-app-capable" content="yes">
@@ -56,7 +56,7 @@
   <div id="mainApp" class="hidden flex-col min-h-screen w-full">
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
+        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense Portal</h1></div></div>
         <div class="flex items-center space-x-3">
           <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs"><button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button><button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button></div>
           <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><i class="fa-solid fa-circle-user text-red-400"></i><span id="navEmployeeName" class="text-xs font-semibold text-slate-200 truncate max-w-[120px]">User</span><button onclick="openProfileModal()" class="text-slate-400 hover:text-white text-xs ml-1"><i class="fa-solid fa-pen"></i></button></div>
@@ -124,10 +124,10 @@
                 <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
+                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Rapido</option><option>Uber</option><option>Cab/Taxi</option><option>Auto</option><option>Bus</option><option>Train</option><option>Flight</option></select>
               </div>
               <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
+                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Brunch">Brunch</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
                 <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
               </div>
               <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
@@ -136,7 +136,7 @@
                   <input type="number" id="rentDurationCount" placeholder="No. of Days" min="1" class="w-1/2 text-xs p-2 rounded border border-slate-300" />
                   <select id="rentDurationType" class="w-1/2 text-xs p-2 rounded border border-slate-300 bg-white"><option value="Days">Days</option><option value="Months">Months</option></select>
                 </div>
-                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
+                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option><option>Rented House</option></select>
               </div>
               <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
                 <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
@@ -171,7 +171,7 @@
 
                   <!-- Payment Proof -->
                   <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
-                    <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-money-bill-transfer text-blue-500 mr-1.5"></i>Payment Proof</label>
+                    <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-money-bill-transfer text-blue-500 mr-1.5"></i>Payment</label>
                     <div class="flex space-x-2">
                       <label id="btn-filePayment-img" class="flex-1 cursor-pointer bg-white border border-blue-200 text-blue-600 rounded py-2 text-center shadow-sm hover:bg-blue-50 transition">
                         <i class="fa-solid fa-image mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Gallery</span>
@@ -310,7 +310,7 @@
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
       currentTripId: null, activeCategory: "Travel", editingExpenseId: null,
       trips: [], expenses: [], personalTrips: [], personalExpenses: [],
-      billPreviewData: null, payPreviewData: null // New variables for preview storage
+      billPreviewData: null, payPreviewData: null 
     };
     let sessionTimeoutTracker; let authMode = "login"; 
     let categoryChartInstance = null; let tripChartInstance = null;
@@ -546,7 +546,34 @@
         }
       } 
       else { document.getElementById('othersReason').value = exp.reason; }
-      resetAttachmentUI(); window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      resetAttachmentUI(); 
+      
+      // LOAD EXISTING ATTACHMENTS INTO UI
+      if ((exp.billUrl && exp.billUrl !== "No Bill") || exp.billImage) {
+        setExistingAttachmentUI('fileBill', exp.billUrl, exp.billImage);
+      }
+      if ((exp.payUrl && exp.payUrl !== "No Payment") || exp.payImage) {
+        setExistingAttachmentUI('filePayment', exp.payUrl, exp.payImage);
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setExistingAttachmentUI(type, url, b64) {
+      const activeBtn = document.getElementById(`btn-${type}-img`);
+      activeBtn.className = "flex-1 cursor-pointer bg-emerald-500 border border-emerald-600 text-white rounded py-2 text-center shadow-sm transition";
+      activeBtn.innerHTML = `<i class="fa-solid fa-circle-check mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Saved</span><input type="file" accept="image/*" onchange="previewImageFile(this, '${type}', 'img')" class="hidden" />`;
+      
+      document.getElementById(`preview-${type}`).classList.remove("hidden");
+      document.getElementById(`preview-name-${type}`).innerText = "View Saved File";
+      document.getElementById(`preview-icon-${type}`).className = "fa-solid fa-arrow-up-right-from-square text-emerald-500 text-xs";
+      
+      if (type === 'fileBill') {
+         appState.billPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" };
+      } else {
+         appState.payPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" };
+      }
     }
 
     function cancelEdit() {
@@ -568,7 +595,6 @@
     let currentCompressedBill = null, currentCompressedPay = null;
     function compressImageToJpeg(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); let w=i.width, h=i.height; if(w>1280||h>1280){if(w>h){h=Math.round((h*1280)/w);w=1280;}else{w=Math.round((w*1280)/h);h=1280;}} c.width=w; c.height=h; c.getContext("2d").drawImage(i,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72)); }; }; }); }
     
-    // --- UPDATED PREVIEW LOGIC ---
     async function previewImageFile(input, type, subType) { 
       if(input.files && input.files[0]) { 
         const file = input.files[0]; let b64 = null; 
@@ -579,13 +605,12 @@
         
         if(type==='fileBill') {
             currentCompressedBill = b64; 
-            appState.billPreviewData = { b64: b64, isPdf: isPdf, name: file.name || "Paper_Bill" };
+            appState.billPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Paper_Bill" };
         } else {
             currentCompressedPay = b64; 
-            appState.payPreviewData = { b64: b64, isPdf: isPdf, name: file.name || "Payment_Proof" };
+            appState.payPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Payment_Proof" };
         }
         
-        // Show Success UI (Green Button)
         const groupColor = type === 'fileBill' ? 'red' : 'blue';
         document.getElementById(`btn-${type}-img`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
         document.getElementById(`btn-${type}-pdf`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
@@ -596,17 +621,24 @@
         activeBtn.className = "flex-1 cursor-pointer bg-emerald-500 border border-emerald-600 text-white rounded py-2 text-center shadow-sm transition";
         activeBtn.innerHTML = `<i class="fa-solid fa-circle-check mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Attached</span><input type="file" accept="${subType==='img'?'image/*':'application/pdf'}" onchange="previewImageFile(this, '${type}', '${subType}')" class="hidden" />`;
         
-        // Show Smart Preview Bar
         document.getElementById(`preview-${type}`).classList.remove("hidden");
         document.getElementById(`preview-name-${type}`).innerText = file.name || "Attachment";
         document.getElementById(`preview-icon-${type}`).className = isPdf ? "fa-solid fa-file-pdf text-red-400 text-xs" : "fa-solid fa-image text-blue-400 text-xs";
       } 
     }
 
-    // --- MODAL FUNCTIONS ---
     function openFullPreview(type) {
       let data = type === 'fileBill' ? appState.billPreviewData : appState.payPreviewData;
-      if (!data || !data.b64) return;
+      if (!data) return;
+      
+      // If we have a cloud URL but no local image data, open in a new tab safely
+      if (data.url && !data.b64 && data.url.includes('http')) {
+        window.open(data.url, '_blank');
+        return;
+      }
+
+      if (!data.b64) return;
+      
       document.getElementById("filePreviewModal").classList.remove("hidden");
       if (data.isPdf) {
         document.getElementById("fullPreviewImg").classList.add("hidden");
@@ -620,6 +652,7 @@
         document.getElementById("fullPreviewImg").src = src;
       }
     }
+
     function closeFullPreview() {
       document.getElementById("filePreviewModal").classList.add("hidden");
       document.getElementById("fullPreviewPdf").src = ""; // Clear memory
