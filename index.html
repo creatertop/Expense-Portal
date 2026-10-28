@@ -56,7 +56,7 @@
   <div id="mainApp" class="hidden flex-col min-h-screen w-full">
     <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1></div></div>
+        <div class="flex items-center space-x-3"><div class="w-10 h-10 zoho-red rounded-lg flex items-center justify-center text-white shadow-sm font-bold text-xl"><i class="fa-solid fa-receipt"></i></div><div><h1 class="font-bold text-lg leading-tight">Expense & Travel Portal</h1><p class="text-xs text-slate-400">Client-Site Reimbursements (INR ₹)</p></div></div>
         <div class="flex items-center space-x-3">
           <div id="adminControlsContainer" style="display: none;" class="items-center bg-slate-800 rounded-lg p-1 border border-slate-700 text-xs"><button id="roleEmployeeBtn" onclick="switchRole('employee')" class="px-3 py-1 rounded bg-red-600 text-white font-medium transition"><i class="fa-solid fa-user mr-1"></i> My Data</button><button id="roleAdminBtn" onclick="switchRole('admin')" class="px-3 py-1 rounded text-slate-300 hover:text-white font-medium transition"><i class="fa-solid fa-user-shield mr-1"></i> Admin View</button></div>
           <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700"><i class="fa-solid fa-circle-user text-red-400"></i><span id="navEmployeeName" class="text-xs font-semibold text-slate-200 truncate max-w-[120px]">User</span><button onclick="openProfileModal()" class="text-slate-400 hover:text-white text-xs ml-1"><i class="fa-solid fa-pen"></i></button></div>
@@ -124,23 +124,20 @@
                 <input type="text" id="travelOrigin" placeholder="Origin *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelDestination" placeholder="Destination *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <input type="text" id="travelPurpose" placeholder="Purpose *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
-                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Rapido</option><option>Uber</option><option>Metro</option><option>Cab</option><option>Auto</option><option>Bus</option><option>Train</option><option>Flight</option></select>
+                <select id="travelTransportMode" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option>Cab</option><option>Auto</option><option>Train</option><option>Flight</option></select>
               </div>
               <div id="fieldsFood" class="hidden space-y-3 p-3 bg-amber-50/50 rounded-lg border border-amber-100">
-                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Brunch">Brunch</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
+                <select id="foodReasonSelect" onchange="handleFoodReasonChange(this.value)" class="w-full text-xs p-2 rounded border border-slate-300 bg-white"><option value="Breakfast">Breakfast</option><option value="Lunch">Lunch</option><option value="Dinner">Dinner</option><option value="Snacks">Snacks</option><option value="Custom">Other (Custom)</option></select>
                 <div id="foodCustomReasonDiv" class="hidden mt-2"><input type="text" id="foodCustomReason" placeholder="Specify food reason..." class="w-full text-xs p-2 rounded border border-slate-300" /></div>
               </div>
-              
-              <!-- UPDATED RENT UI FOR MULTI-DAY STAYS -->
               <div id="fieldsRent" class="hidden space-y-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
                 <input type="text" id="rentLocation" placeholder="Location *" class="w-full text-xs p-2 rounded border border-slate-300 mb-2" />
                 <div class="flex space-x-2">
                   <input type="number" id="rentDurationCount" placeholder="No. of Days" min="1" class="w-1/2 text-xs p-2 rounded border border-slate-300" />
                   <select id="rentDurationType" class="w-1/2 text-xs p-2 rounded border border-slate-300 bg-white"><option value="Days">Days</option><option value="Months">Months</option></select>
                 </div>
-                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option><option>Apartment</option><option>Rented House</option></select>
+                <select id="rentRoomType" class="w-full text-xs p-2 rounded border border-slate-300 bg-white mt-2"><option>Hotel</option><option>Guest House</option><option>PG</option></select>
               </div>
-
               <div id="fieldsOthers" class="hidden space-y-3 p-3 bg-purple-50/50 rounded-lg border border-purple-100">
                 <input type="text" id="othersReason" placeholder="Description / Reason *" class="w-full text-xs p-2 rounded border border-slate-300" />
               </div>
@@ -148,6 +145,8 @@
               <div class="border-t border-slate-200 pt-4 mt-4">
                 <label class="block text-xs font-bold text-slate-700 mb-2">Attachments (Optional if editing)</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  
+                  <!-- Paper Bill -->
                   <div class="bg-red-50/50 border border-red-100 rounded-lg p-3">
                     <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-receipt text-red-500 mr-1.5"></i>Paper Bill</label>
                     <div class="flex space-x-2">
@@ -160,7 +159,17 @@
                         <input type="file" accept="application/pdf" onchange="previewImageFile(this, 'fileBill', 'pdf')" class="hidden" />
                       </label>
                     </div>
+                    <!-- Smart Preview Bar -->
+                    <div id="preview-fileBill" class="hidden mt-2 flex items-center justify-between bg-white px-2 py-1.5 rounded border border-slate-200 cursor-pointer hover:bg-slate-50 transition shadow-sm" onclick="openFullPreview('fileBill')">
+                      <div class="flex items-center space-x-2 overflow-hidden">
+                        <i id="preview-icon-fileBill" class="fa-solid fa-image text-slate-400 text-xs"></i>
+                        <span id="preview-name-fileBill" class="text-[10px] font-semibold text-slate-600 truncate max-w-[100px]">filename.jpg</span>
+                      </div>
+                      <i class="fa-solid fa-expand text-slate-400 text-[10px]" title="Click to view"></i>
+                    </div>
                   </div>
+
+                  <!-- Payment Proof -->
                   <div class="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
                     <label class="block text-[11px] font-bold text-slate-800 mb-2"><i class="fa-solid fa-money-bill-transfer text-blue-500 mr-1.5"></i>Payment Proof</label>
                     <div class="flex space-x-2">
@@ -173,7 +182,16 @@
                         <input type="file" accept="application/pdf" onchange="previewImageFile(this, 'filePayment', 'pdf')" class="hidden" />
                       </label>
                     </div>
+                    <!-- Smart Preview Bar -->
+                    <div id="preview-filePayment" class="hidden mt-2 flex items-center justify-between bg-white px-2 py-1.5 rounded border border-slate-200 cursor-pointer hover:bg-slate-50 transition shadow-sm" onclick="openFullPreview('filePayment')">
+                      <div class="flex items-center space-x-2 overflow-hidden">
+                        <i id="preview-icon-filePayment" class="fa-solid fa-image text-slate-400 text-xs"></i>
+                        <span id="preview-name-filePayment" class="text-[10px] font-semibold text-slate-600 truncate max-w-[100px]">filename.jpg</span>
+                      </div>
+                      <i class="fa-solid fa-expand text-slate-400 text-[10px]" title="Click to view"></i>
+                    </div>
                   </div>
+
                 </div>
               </div>
 
@@ -265,6 +283,20 @@
     </div>
   </div>
 
+  <!-- FULL SCREEN FILE PREVIEW MODAL -->
+  <div id="filePreviewModal" class="fixed inset-0 bg-slate-900/95 hidden flex items-center justify-center p-2 z-[250] transition-opacity">
+    <div class="bg-white rounded-xl w-full max-w-3xl flex flex-col h-[90vh] shadow-2xl">
+      <div class="flex justify-between items-center p-4 border-b border-slate-200">
+        <h3 class="font-bold text-base text-slate-800 flex items-center"><i class="fa-solid fa-eye text-blue-600 mr-2"></i> Attachment Preview</h3>
+        <button onclick="closeFullPreview()" class="text-slate-500 hover:text-red-600 transition p-1"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="flex-1 p-2 overflow-hidden flex items-center justify-center bg-slate-100 relative rounded-b-xl">
+        <img id="fullPreviewImg" class="hidden max-w-full max-h-full object-contain rounded shadow-sm" />
+        <iframe id="fullPreviewPdf" class="hidden w-full h-full rounded shadow-sm bg-white" frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================== -->
   <!-- JAVASCRIPT APP LOGIC -->
   <!-- ========================================== -->
@@ -277,7 +309,8 @@
     let appState = { 
       currentUser: "", employeeId: "", email: "", password: "", userRole: "Employee", currentRole: "employee",
       currentTripId: null, activeCategory: "Travel", editingExpenseId: null,
-      trips: [], expenses: [], personalTrips: [], personalExpenses: []
+      trips: [], expenses: [], personalTrips: [], personalExpenses: [],
+      billPreviewData: null, payPreviewData: null // New variables for preview storage
     };
     let sessionTimeoutTracker; let authMode = "login"; 
     let categoryChartInstance = null; let tripChartInstance = null;
@@ -348,7 +381,7 @@
             document.getElementById("authForm").reset(); resetAttachmentUI();
           }
         } else alert(result.message);
-      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 458."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
+      } catch (err) { alert("Network Error: Ensure your Google Script URL is pasted on line 493."); } finally { btn.innerHTML = originalHtml; btn.disabled = false; }
     }
 
     async function handleOtpSubmit(e) {
@@ -535,13 +568,24 @@
     let currentCompressedBill = null, currentCompressedPay = null;
     function compressImageToJpeg(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement("canvas"); let w=i.width, h=i.height; if(w>1280||h>1280){if(w>h){h=Math.round((h*1280)/w);w=1280;}else{w=Math.round((w*1280)/h);h=1280;}} c.width=w; c.height=h; c.getContext("2d").drawImage(i,0,0,w,h); resolve(c.toDataURL("image/jpeg",0.72)); }; }; }); }
     
+    // --- UPDATED PREVIEW LOGIC ---
     async function previewImageFile(input, type, subType) { 
       if(input.files && input.files[0]) { 
         const file = input.files[0]; let b64 = null; 
-        if(file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } 
-        else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } 
-        if(type==='fileBill') currentCompressedBill = b64; else currentCompressedPay = b64; 
+        const isPdf = file.type.includes('pdf') || subType === 'pdf';
         
+        if(!isPdf && file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } 
+        else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } 
+        
+        if(type==='fileBill') {
+            currentCompressedBill = b64; 
+            appState.billPreviewData = { b64: b64, isPdf: isPdf, name: file.name || "Paper_Bill" };
+        } else {
+            currentCompressedPay = b64; 
+            appState.payPreviewData = { b64: b64, isPdf: isPdf, name: file.name || "Payment_Proof" };
+        }
+        
+        // Show Success UI (Green Button)
         const groupColor = type === 'fileBill' ? 'red' : 'blue';
         document.getElementById(`btn-${type}-img`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
         document.getElementById(`btn-${type}-pdf`).className = `flex-1 cursor-pointer bg-white border border-${groupColor}-200 text-${groupColor}-600 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 transition`;
@@ -551,10 +595,41 @@
         const activeBtn = document.getElementById(`btn-${type}-${subType}`);
         activeBtn.className = "flex-1 cursor-pointer bg-emerald-500 border border-emerald-600 text-white rounded py-2 text-center shadow-sm transition";
         activeBtn.innerHTML = `<i class="fa-solid fa-circle-check mb-1 block text-sm"></i><span class="text-[9px] font-bold uppercase tracking-wider">Attached</span><input type="file" accept="${subType==='img'?'image/*':'application/pdf'}" onchange="previewImageFile(this, '${type}', '${subType}')" class="hidden" />`;
+        
+        // Show Smart Preview Bar
+        document.getElementById(`preview-${type}`).classList.remove("hidden");
+        document.getElementById(`preview-name-${type}`).innerText = file.name || "Attachment";
+        document.getElementById(`preview-icon-${type}`).className = isPdf ? "fa-solid fa-file-pdf text-red-400 text-xs" : "fa-solid fa-image text-blue-400 text-xs";
       } 
     }
 
+    // --- MODAL FUNCTIONS ---
+    function openFullPreview(type) {
+      let data = type === 'fileBill' ? appState.billPreviewData : appState.payPreviewData;
+      if (!data || !data.b64) return;
+      document.getElementById("filePreviewModal").classList.remove("hidden");
+      if (data.isPdf) {
+        document.getElementById("fullPreviewImg").classList.add("hidden");
+        document.getElementById("fullPreviewPdf").classList.remove("hidden");
+        let src = data.b64.startsWith("data:") ? data.b64 : "data:application/pdf;base64," + data.b64;
+        document.getElementById("fullPreviewPdf").src = src;
+      } else {
+        document.getElementById("fullPreviewPdf").classList.add("hidden");
+        document.getElementById("fullPreviewImg").classList.remove("hidden");
+        let src = data.b64.startsWith("data:") ? data.b64 : "data:image/jpeg;base64," + data.b64;
+        document.getElementById("fullPreviewImg").src = src;
+      }
+    }
+    function closeFullPreview() {
+      document.getElementById("filePreviewModal").classList.add("hidden");
+      document.getElementById("fullPreviewPdf").src = ""; // Clear memory
+    }
+
     function resetAttachmentUI() {
+      appState.billPreviewData = null; appState.payPreviewData = null;
+      if(document.getElementById('preview-fileBill')) document.getElementById('preview-fileBill').classList.add('hidden');
+      if(document.getElementById('preview-filePayment')) document.getElementById('preview-filePayment').classList.add('hidden');
+      
       if(!document.getElementById('btn-fileBill-img')) return;
       document.getElementById('btn-fileBill-img').className = "flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition";
       document.getElementById('btn-fileBill-pdf').className = "flex-1 cursor-pointer bg-white border border-red-200 text-red-600 rounded py-2 text-center shadow-sm hover:bg-red-50 transition";
