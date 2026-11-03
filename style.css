@@ -12,3 +12,17 @@ body {
 .dark input[type="date"]::-webkit-calendar-picker-indicator { 
   filter: invert(1); 
 }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body { 
+  font-family: 'Inter', sans-serif; 
+}
+
+.zoho-red { 
+  background-color: #E42528; 
+}
+
+/* Date picker icon fix for dark mode */
+.dark input[type="date"]::-webkit-calendar-picker-indicator { 
+  filter: invert(1); 
+}
