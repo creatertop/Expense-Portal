@@ -271,8 +271,13 @@ function editExpense(expId) {
   
   resetAttachmentUI(); 
   
-  if ((exp.billUrl && exp.billUrl !== "No Bill") || exp.billImage) { setExistingAttachmentUI('fileBill', exp.billUrl, exp.billImage); }
-  if ((exp.payUrl && exp.payUrl !== "No Payment") || exp.payImage) { setExistingAttachmentUI('filePayment', exp.payUrl, exp.payImage); }
+  // LOAD EXISTING ATTACHMENTS INTO UI
+  if ((exp.billUrl && exp.billUrl !== "No Bill") || exp.billImage) {
+    setExistingAttachmentUI('fileBill', exp.billUrl, exp.billImage);
+  }
+  if ((exp.payUrl && exp.payUrl !== "No Payment") || exp.payImage) {
+    setExistingAttachmentUI('filePayment', exp.payUrl, exp.payImage);
+  }
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -286,8 +291,11 @@ function setExistingAttachmentUI(type, url, b64) {
   document.getElementById(`preview-name-${type}`).innerText = "View Saved File";
   document.getElementById(`preview-icon-${type}`).className = "fa-solid fa-arrow-up-right-from-square text-emerald-500 dark:text-emerald-400 text-xs";
   
-  if (type === 'fileBill') { appState.billPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" }; } 
-  else { appState.payPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" }; }
+  if (type === 'fileBill') {
+     appState.billPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" };
+  } else {
+     appState.payPreviewData = { b64: b64, url: url, isPdf: false, name: "View Saved File" };
+  }
 }
 
 function cancelEdit() {
@@ -317,8 +325,13 @@ async function previewImageFile(input, type, subType) {
     if(!isPdf && file.type.startsWith('image/')) { b64 = await compressImageToJpeg(file); } 
     else { b64 = await new Promise(resolve => { const reader = new FileReader(); reader.onload = e => resolve(e.target.result); reader.readAsDataURL(file); }); } 
     
-    if(type==='fileBill') { currentCompressedBill = b64; appState.billPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Paper_Bill" }; } 
-    else { currentCompressedPay = b64; appState.payPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Payment_Proof" }; }
+    if(type==='fileBill') {
+        currentCompressedBill = b64; 
+        appState.billPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Paper_Bill" };
+    } else {
+        currentCompressedPay = b64; 
+        appState.payPreviewData = { b64: b64, url: null, isPdf: isPdf, name: file.name || "Payment_Proof" };
+    }
     
     const groupColor = type === 'fileBill' ? 'red' : 'blue';
     document.getElementById(`btn-${type}-img`).className = `flex-1 cursor-pointer bg-white dark:bg-slate-700 border border-${groupColor}-200 dark:border-${groupColor}-800 text-${groupColor}-600 dark:text-${groupColor}-400 rounded py-2 text-center shadow-sm hover:bg-${groupColor}-50 dark:hover:bg-slate-600 transition`;
@@ -339,20 +352,33 @@ async function previewImageFile(input, type, subType) {
 function openFullPreview(type) {
   let data = type === 'fileBill' ? appState.billPreviewData : appState.payPreviewData;
   if (!data) return;
-  if (data.url && !data.b64 && data.url.includes('http')) { window.open(data.url, '_blank'); return; }
+  
+  // If we have a cloud URL but no local image data, open in a new tab safely
+  if (data.url && !data.b64 && data.url.includes('http')) {
+    window.open(data.url, '_blank');
+    return;
+  }
+
   if (!data.b64) return;
   
   document.getElementById("filePreviewModal").classList.remove("hidden");
   if (data.isPdf) {
-    document.getElementById("fullPreviewImg").classList.add("hidden"); document.getElementById("fullPreviewPdf").classList.remove("hidden");
-    let src = data.b64.startsWith("data:") ? data.b64 : "data:application/pdf;base64," + data.b64; document.getElementById("fullPreviewPdf").src = src;
+    document.getElementById("fullPreviewImg").classList.add("hidden");
+    document.getElementById("fullPreviewPdf").classList.remove("hidden");
+    let src = data.b64.startsWith("data:") ? data.b64 : "data:application/pdf;base64," + data.b64;
+    document.getElementById("fullPreviewPdf").src = src;
   } else {
-    document.getElementById("fullPreviewPdf").classList.add("hidden"); document.getElementById("fullPreviewImg").classList.remove("hidden");
-    let src = data.b64.startsWith("data:") ? data.b64 : "data:image/jpeg;base64," + data.b64; document.getElementById("fullPreviewImg").src = src;
+    document.getElementById("fullPreviewPdf").classList.add("hidden");
+    document.getElementById("fullPreviewImg").classList.remove("hidden");
+    let src = data.b64.startsWith("data:") ? data.b64 : "data:image/jpeg;base64," + data.b64;
+    document.getElementById("fullPreviewImg").src = src;
   }
 }
 
-function closeFullPreview() { document.getElementById("filePreviewModal").classList.add("hidden"); document.getElementById("fullPreviewPdf").src = ""; }
+function closeFullPreview() {
+  document.getElementById("filePreviewModal").classList.add("hidden");
+  document.getElementById("fullPreviewPdf").src = ""; // Clear memory
+}
 
 function resetAttachmentUI() {
   appState.billPreviewData = null; appState.payPreviewData = null;
